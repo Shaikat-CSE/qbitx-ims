@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # === CONFIGURATION ===
-PROJECT_NAME="django_ims"
+PROJECT_NAME="qbitx-ims"
 VPS_USER="root"
 VPS_IP="69.62.75.219"
-DJANGO_DIR="/home/$VPS_USER/$PROJECT_NAME"
+DJANGO_DIR="/var/www/qbitx_ims"
 PYTHON_BIN="python3"
 VENV_DIR="$DJANGO_DIR/venv"
 GUNICORN_SERVICE="gunicorn"
