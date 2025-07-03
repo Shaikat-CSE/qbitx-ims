@@ -4,7 +4,7 @@
 PROJECT_NAME="qbitx-ims"
 VPS_USER="root"
 VPS_IP="69.62.75.219"
-DJANGO_DIR="/var/www/qbitx_ims"
+DJANGO_DIR="/var/www/qbitx-ims"
 PYTHON_BIN="python3"
 VENV_DIR="$DJANGO_DIR/venv"
 GUNICORN_SERVICE="gunicorn"
