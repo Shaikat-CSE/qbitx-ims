@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice - QBITX IMS Transform Suppliers</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Custom styles -->
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        @media print {
+            body {
+                padding: 0;
+                margin: 0;
+                font-size: 11px; /* Reduce font size for print */
+            }
+            .no-print {
+                display: none !important;
+            }
+            .print-only {
+                display: block !important;
+            }
+            .container {
+                width: 100%;
+                max-width: 100%;
+                padding: 0;
+                margin: 0;
+            }
+            .card {
+                border: none !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+            }
+            .card-body {
+                padding: 0.25rem !important;
+            }
+            /* Reduce spacing */
+            .invoice-header {
+                margin-bottom: 5px !important;
+                padding-bottom: 5px !important;
+            }
+            .invoice-details {
+                margin-bottom: 5px !important;
+            }
+            h1, h2, h3, h4, h5, h6 {
+                margin-bottom: 0.2rem !important;
+                margin-top: 0.2rem !important;
+            }
+            .invoice-title {
+                font-size: 1.2rem !important;
+            }
+            /* Optimize table for single page */
+            .table {
+                font-size: 8px !important;
+                margin-bottom: 5px !important;
+                border-collapse: collapse !important;
+            }
+            .table td, .table th {
+                padding: 0.15rem !important;
+                border-width: 0.5px !important;
+            }
+            .table-sm td, .table-sm th {
+                padding: 0.1rem !important;
+            }
+            /* Reduce spacing for notes and signature */
+            .invoice-notes {
+                margin-top: 5px !important;
+                padding-top: 5px !important;
+                border-top-width: 0.5px !important;
+            }
+            .signature-area {
+                margin-top: 5px !important;
+                padding-top: 5px !important;
+                border-top-width: 0.5px !important;
+            }
+            .signature-area .mb-2 {
+                margin-bottom: 0.2rem !important;
+            }
+            p {
+                margin-bottom: 0.1rem !important;
+            }
+            /* Force page to fit on a single page */
+            @page {
+                size: portrait;
+                margin: 0.3cm;
+            }
+            /* Use more compact layout */
+            .row {
+                margin-left: -5px !important;
+                margin-right: -5px !important;
+            }
+            .col, .col-1, .col-2, .col-3, .col-4, .col-5, .col-6, .col-7, .col-8, .col-9, .col-10, .col-11, .col-12, 
+            .col-sm, .col-md, .col-lg, .col-xl {
+                padding-left: 5px !important;
+                padding-right: 5px !important;
+            }
+        }
+        .print-only {
+            display: none;
+        }
+        .invoice-header {
+            border-bottom: 2px solid #f0ad4e;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+        }
+        .invoice-title {
+            font-weight: 700;
+            color: #333;
+        }
+        .invoice-details {
+            margin-bottom: 40px;
+        }
+        .company-details {
+            text-align: right;
+        }
+        .table-invoice th {
+            background-color: #f8f9fa;
+        }
+        .invoice-total {
+            text-align: right;
+            margin-top: 30px;
+        }
+        .invoice-notes {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #dee2e6;
+        }
+        .signature-area {
+            margin-top: 60px;
+            border-top: 1px dotted #dee2e6;
+            padding-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4 mb-5">
+        <!-- Print Controls - Not visible when printing -->
+        <div class="row mb-4 no-print">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h4><i class="fas fa-file-invoice"></i> Invoice Preview</h4>
+                            <div>
+                                <button id="printInvoiceBtn" class="btn btn-primary me-2">
+                                    <i class="fas fa-print"></i> Print Invoice
+                                </button>
+                                <a href="stock.html" class="btn btn-secondary">
+                                    <i class="fas fa-arrow-left"></i> Back to Stock
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Invoice Content -->
+        <div class="card">
+            <div class="card-body">
+                <div class="invoice-header page-break-inside-avoid">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h2 class="invoice-title">QBITX IMS Transform Suppliers</h2>
+                            <div class="small">Office No - 3073, CJKS Shopping Complex, Kazir Dewri, Chattogram</div>
+                            <div class="small">Phone: +8801322906660 | Email: info@qbitx.io</div>
+                        </div>
+                        <div class="col-md-6 company-details">
+                            <h1 class="text-uppercase text-end">Invoice</h1>
+                            <p class="mb-0 small"><strong>Invoice #: </strong><span id="invoiceNumber"></span></p>
+                            <p class="mb-0 small"><strong>Date: </strong><span id="invoiceDate"></span> | <strong>Reference: </strong><span id="referenceNumber"></span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="invoice-details page-break-inside-avoid">
+                    <div class="row">
+                        <div class="col-md-6" id="clientSection">
+                            <h6>Bill To:</h6>
+                            <p class="mb-0 small"><strong id="clientName"></strong> | <span id="clientContact"></span></p>
+                            <p class="mb-0 small" id="clientAddress"></p>
+                            <p class="mb-0 small" id="clientEmail"></p>
+                        </div>
+                        <div class="col-md-6" id="supplierSection" style="display: none;">
+                            <h6>Supplier:</h6>
+                            <p class="mb-0 small"><strong id="supplierName"></strong> | <span id="supplierContact"></span></p>
+                            <p class="mb-0 small" id="supplierAddress"></p>
+                            <p class="mb-0 small" id="supplierEmail"></p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Transaction Details:</h6>
+                            <p class="mb-0 small"><strong>Type: </strong><span id="transactionType"></span> | <strong>Date: </strong><span id="transactionDate"></span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-responsive page-break-inside-avoid">
+                    <table class="table table-sm table-bordered table-invoice">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Product</th>
+                                <th>SKU</th>
+                                <th>Qty</th>
+                                <th>UOM</th>
+                                <th>Unit Price</th>
+                                <th>Discount</th>
+                                <th>Total</th>
+                                <th>Payable</th>
+                            </tr>
+                        </thead>
+                        <tbody id="invoiceItems">
+                            <!-- Invoice items will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="invoice-total page-break-inside-avoid">
+                    <div class="row">
+                        <div class="col-md-6"></div>
+                        <div class="col-md-6">
+                            <table class="table table-sm table-borderless">
+                                <tr>
+                                    <td class="pb-0"><strong>Subtotal:</strong></td>
+                                    <td class="pb-0" id="subtotal"></td>
+                                </tr>
+                                <tr>
+                                    <td class="py-0"><strong>Discount:</strong></td>
+                                    <td class="py-0" id="discountTotal"></td>
+                                </tr>
+                                <tr>
+                                    <td class="py-0"><strong>Tax (0%):</strong></td>
+                                    <td class="py-0">৳0.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="pt-0"><strong>Total:</strong></td>
+                                    <td class="pt-0" id="total"></td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="invoice-notes page-break-inside-avoid">
+                    <h6>Notes:</h6>
+                    <p class="mb-0 small" id="invoiceNotes"></p>
+                </div>
+
+                <div class="signature-area page-break-inside-avoid">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-2">____________________________</p>
+                            <p>Authorized Signature</p>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <p class="mb-2">____________________________</p>
+                            <p>Received By</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/invoice.js"></script>
+</body>
+</html> 

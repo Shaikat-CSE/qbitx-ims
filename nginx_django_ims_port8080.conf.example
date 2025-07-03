@@ -1,0 +1,17 @@
+server {
+    listen 8080;
+    server_name 69.62.75.219;
+
+    location = /favicon.ico { access_log off; log_not_found off; }
+    location /static/ {
+        alias /home/yourusername/django_ims/staticfiles/;
+    }
+    location /media/ {
+        alias /home/yourusername/django_ims/media/;
+    }
+
+    location / {
+        include proxy_params;
+        proxy_pass http://unix:/home/yourusername/django_ims/gunicorn.sock;
+    }
+} 

@@ -1,0 +1,319 @@
+/* permissions.css - Styles for permission-based UI elements */
+
+/* General disabled styles */
+.disabled {
+    opacity: 0.6;
+    cursor: not-allowed !important;
+    pointer-events: none;
+}
+
+/* Add a gray overlay with a lock icon for unauthorized actions */
+button.disabled::before,
+a.disabled::before,
+input.disabled::before,
+select.disabled::before {
+    content: "\f023"; /* Font Awesome lock icon */
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 20px;
+    color: rgba(0, 0, 0, 0.5);
+    z-index: 10;
+}
+
+/* Apply a gray filter to disabled forms */
+form.disabled {
+    position: relative;
+    filter: grayscale(50%);
+}
+
+form.disabled::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(200, 200, 200, 0.3);
+    z-index: 5;
+    pointer-events: none;
+}
+
+/* Navigation specific styles */
+.permission-lock-icon {
+    display: none;
+    margin-left: 8px;
+    color: #dc3545;
+}
+
+.nav-link.disabled .permission-lock-icon {
+    display: inline-block;
+}
+
+.nav-link.disabled {
+    color: #6c757d !important;
+    opacity: 0.7;
+    pointer-events: none;
+    cursor: not-allowed;
+    text-decoration: none;
+}
+
+/* Style for nav items without permissions */
+.nav-item a[data-requires-permission].disabled {
+    position: relative;
+}
+
+.nav-item a[data-requires-permission].disabled:hover::after {
+    content: "You don't have permission to access this section";
+    position: absolute;
+    left: 100%;
+    top: 0;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 4px;
+    width: 200px;
+    z-index: 1000;
+}
+
+/* Specific permission-based styles */
+
+/* Products */
+body:not(.can-add-product) .add-product-btn,
+body:not(.can-add-product) [data-action="add-product"] {
+    opacity: 0.5;
+    cursor: not-allowed !important;
+    pointer-events: none;
+    position: relative;
+}
+
+body:not(.can-change-product) .edit-product-btn,
+body:not(.can-change-product) [data-action="edit-product"] {
+    opacity: 0.5;
+    cursor: not-allowed !important;
+    pointer-events: none;
+}
+
+body:not(.can-delete-product) .delete-product-btn,
+body:not(.can-delete-product) [data-action="delete-product"] {
+    opacity: 0.5;
+    cursor: not-allowed !important;
+    pointer-events: none;
+}
+
+/* Stock transactions */
+body:not(.can-add-stock) #stockForm {
+    position: relative;
+    filter: grayscale(50%);
+}
+
+body:not(.can-add-stock) #stockForm::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(200, 200, 200, 0.3);
+    z-index: 5;
+    pointer-events: none;
+}
+
+/* Suppliers */
+body:not(.can-add-supplier) .add-supplier-btn,
+body:not(.can-add-supplier) [data-action="add-supplier"] {
+    opacity: 0.5;
+    cursor: not-allowed !important;
+    pointer-events: none;
+}
+
+body:not(.can-change-supplier) .edit-supplier-btn,
+body:not(.can-change-supplier) [data-action="edit-supplier"] {
+    opacity: 0.5;
+    cursor: not-allowed !important;
+    pointer-events: none;
+}
+
+body:not(.can-delete-supplier) .delete-supplier-btn,
+body:not(.can-delete-supplier) [data-action="delete-supplier"] {
+    opacity: 0.5;
+    cursor: not-allowed !important;
+    pointer-events: none;
+}
+
+/* Clients */
+body:not(.can-add-client) .add-client-btn,
+body:not(.can-add-client) [data-action="add-client"] {
+    opacity: 0.5;
+    cursor: not-allowed !important;
+    pointer-events: none;
+}
+
+body:not(.can-change-client) .edit-client-btn,
+body:not(.can-change-client) [data-action="edit-client"] {
+    opacity: 0.5;
+    cursor: not-allowed !important;
+    pointer-events: none;
+}
+
+body:not(.can-delete-client) .delete-client-btn,
+body:not(.can-delete-client) [data-action="delete-client"] {
+    opacity: 0.5;
+    cursor: not-allowed !important;
+    pointer-events: none;
+}
+
+/* Add tooltips to disabled elements */
+.disabled[title] {
+    position: relative;
+}
+
+.disabled[title]:hover::after {
+    content: attr(title);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 1000;
+}
+
+/* Add "Unauthorized" badge to disabled forms */
+form.disabled::before {
+    content: "Unauthorized";
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background-color: #dc3545;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: bold;
+    z-index: 10;
+}
+
+/* Permission warning message */
+.permission-warning {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeeba;
+    border-radius: 4px;
+    padding: 10px 15px;
+    margin: 10px 0;
+    display: flex;
+    align-items: center;
+}
+
+.permission-warning i {
+    margin-right: 10px;
+    font-size: 18px;
+}
+
+/* Dashboard action buttons */
+.btn-group a.btn.disabled {
+    opacity: 0.6;
+    cursor: not-allowed !important;
+    pointer-events: none;
+    position: relative;
+    color: #6c757d;
+    background-color: #f8f9fa;
+    border-color: #6c757d;
+}
+
+.btn-group a.btn.disabled .permission-lock-icon {
+    display: inline-block;
+    margin-left: 5px;
+    color: #dc3545;
+}
+
+/* When hovering over a disabled dashboard action button */
+.btn-group a.btn.disabled:hover::after {
+    content: attr(title);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 1000;
+    margin-bottom: 5px;
+}
+
+/* Reports */
+body:not(.can-view-reports) .report-section {
+    position: relative;
+    filter: grayscale(50%);
+}
+
+body:not(.can-view-reports) .report-section::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(200, 200, 200, 0.3);
+    z-index: 5;
+    pointer-events: none;
+}
+
+body:not(.can-view-reports) .report-section::before {
+    content: "Reports Access Required";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #dc3545;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: bold;
+    z-index: 10;
+}
+
+body:not(.can-export-reports) .export-report-btn,
+body:not(.can-export-reports) [data-action="export-report"] {
+    opacity: 0.5;
+    cursor: not-allowed !important;
+    pointer-events: none;
+}
+
+body:not(.can-print-reports) .print-report-btn,
+body:not(.can-print-reports) [data-action="print-report"] {
+    opacity: 0.5;
+    cursor: not-allowed !important;
+    pointer-events: none;
+}
+
+/* Report page specific styles */
+body:not(.can-view-reports) #reportForm {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+body:not(.can-view-reports) #reportForm::after {
+    content: "You do not have permission to generate reports";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 10px 15px;
+    border-radius: 5px;
+    z-index: 100;
+} 

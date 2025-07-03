@@ -1,0 +1,12 @@
+[Unit]
+Description=gunicorn daemon
+After=network.target
+
+[Service]
+User=yourusername
+Group=www-data
+WorkingDirectory=/home/yourusername/django_ims
+ExecStart=/home/yourusername/django_ims/venv/bin/gunicorn --workers 3 --bind unix:/home/yourusername/django_ims/gunicorn.sock django_ims.wsgi:application
+
+[Install]
+WantedBy=multi-user.target 

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Form - Golden Niche IMS</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Flatpickr for Date Picker -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <!-- Custom styles -->
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <header class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
+        <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3" href="dashboard.html">
+            Golden Niche <span>IMS</span>
+        </a>
+        <button class="navbar-toggler position-absolute d-md-none collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="navbar-nav">
+            <div class="nav-item text-nowrap">
+                <a class="nav-link px-3" href="#" id="logoutBtn">Sign out</a>
+            </div>
+        </div>
+    </header>
+
+    <div class="container-fluid">
+        <div class="row">
+            <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-dark sidebar collapse">
+                <div class="position-sticky pt-3">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="dashboard.html">
+                                <i class="fas fa-tachometer-alt"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="products.html">
+                                <i class="fas fa-box"></i> Products
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="stock.html">
+                                <i class="fas fa-warehouse"></i> Stock In/Out
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="reports.html">
+                                <i class="fas fa-chart-bar"></i> Reports
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2" id="formTitle">Add New Product</h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <a href="products.html" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to Products
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Product Form -->
+                <div class="card">
+                    <div class="card-body">
+                        <form id="productForm" class="needs-validation" novalidate>
+                            <input type="hidden" id="productId">
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="productName" class="form-label">Product Name</label>
+                                    <input type="text" class="form-control" id="productName" required>
+                                    <div class="invalid-feedback">
+                                        Please enter a product name.
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="productSKU" class="form-label">SKU</label>
+                                    <input type="text" class="form-control" id="productSKU" required>
+                                    <div class="invalid-feedback">
+                                        Please enter a SKU.
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label for="productType" class="form-label">Product Type</label>
+                                    <select class="form-select" id="productType" required>
+                                        <option value="" selected disabled>Select product type</option>
+                                        <!-- Product types will be loaded here -->
+                                    </select>
+                                    <div class="invalid-feedback">
+                                        Please select a product type.
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="productQuantity" class="form-label">Quantity</label>
+                                    <input type="number" class="form-control" id="productQuantity" min="0" required>
+                                    <div class="invalid-feedback">
+                                        Please enter a valid quantity.
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="productPrice" class="form-label">Price</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">৳</span>
+                                        <input type="number" step="0.01" min="0.01" class="form-control" id="productPrice" required>
+                                        <div class="invalid-feedback">
+                                            Please enter a valid price.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Product Tracking Information -->
+                            <div class="card mb-3">
+                                <div class="card-header">
+                                    <h5 class="mb-0">Product Tracking Information</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label for="productLocation" class="form-label">Storage Location</label>
+                                            <input type="text" class="form-control" id="productLocation" placeholder="e.g. Warehouse A, Shelf B3">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="productBarcode" class="form-label">Barcode</label>
+                                            <div class="input-group">
+                                                <input type="text" class="form-control" id="productBarcode" placeholder="Enter product barcode">
+                                                <button class="btn btn-outline-secondary" type="button" id="scanBarcodeBtn" title="Scan Barcode">
+                                                    <i class="fas fa-barcode"></i>
+                                                </button>
+                                            </div>
+                                            <small class="text-muted">Enter manually or use a barcode scanner</small>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-4">
+                                            <label for="productBatchNumber" class="form-label">Batch Number</label>
+                                            <input type="text" class="form-control" id="productBatchNumber" placeholder="Enter batch number">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label for="productExpiryDate" class="form-label">Expiry Date</label>
+                                            <input type="text" class="form-control" id="productExpiryDate" placeholder="Select date">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label for="productMinStockLevel" class="form-label">Minimum Stock Level</label>
+                                            <input type="number" class="form-control" id="productMinStockLevel" min="0" value="5">
+                                            <small class="text-muted">Alert when stock falls below this level</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <button type="button" class="btn btn-outline-secondary me-md-2" onclick="window.location.href='products.html'">Cancel</button>
+                                <button type="submit" class="btn btn-warning">Save Product</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Flatpickr for Date Picker -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <!-- Custom scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/product-form.js"></script>
+</body>
+</html> 
