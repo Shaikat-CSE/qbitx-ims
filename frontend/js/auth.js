@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', function() {
             event.preventDefault();
             
             // Get form values
-            const email = document.getElementById('email').value.trim();
+            const username = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value.trim();
             
             // Reset error messages
@@ -31,15 +31,10 @@ document.addEventListener('DOMContentLoaded', function() {
             // Validate form
             let isValid = true;
             
-            if (!email) {
-                document.getElementById('emailError').textContent = 'Email or username is required';
+            if (!username) {
+                document.getElementById('emailError').textContent = 'Username or email is required';
                 isValid = false;
-            } else if (email.includes('@')) {
-                if (!isValidEmail(email)) {
-                    document.getElementById('emailError').textContent = 'Please enter a valid email address';
-                    isValid = false;
-                }
-            } // No username length check for username-only login
+            }
             
             if (!password) {
                 document.getElementById('passwordError').textContent = 'Password is required';
@@ -53,29 +48,39 @@ document.addEventListener('DOMContentLoaded', function() {
                 submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
                 submitBtn.disabled = true;
                 
-                // Authenticate with Django DRF token endpoint
-                fetch(`${API_CONFIG.BASE_URL.replace(/\/$/, '')}/../api-token-auth/`, {
+                // Authenticate with Django simple login endpoint
+                fetch(`${API_CONFIG.BASE_URL.replace(/\/$/, '')}/../login/`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ username: email, password: password })
+                    body: JSON.stringify({ username: username, password: password }),
+                    credentials: 'include'  // Include cookies for session authentication
                 })
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        if (response.status === 401) {
+                            throw new Error('Invalid username or password');
+                        } else {
+                            throw new Error(`Server error: ${response.status}`);
+                        }
+                    }
+                    return response.json();
+                })
                 .then(data => {
-                    if (data.token) {
-                        // Store token and user info
-                        localStorage.setItem('authToken', data.token);
-                        localStorage.setItem('auth_token', data.token); // Also save as auth_token for compatibility
+                    if (data.success) {
+                        // Store user info
                         localStorage.setItem('isAuthenticated', 'true');
                         localStorage.setItem('currentUser', JSON.stringify({
-                            email: email,
-                            name: email // You can update this if your API returns user info
+                            username: data.username,
+                            name: data.username,
+                            is_staff: data.is_staff,
+                            is_superuser: data.is_superuser
                         }));
                         
-                        // Fetch user permissions after login
-                        return fetchUserPermissions(data.token).then(() => {
-                        window.location.href = 'dashboard.html';
+                        // Fetch user permissions and then redirect
+                        return fetchUserPermissions().then(() => {
+                            window.location.href = 'dashboard.html';
                         });
                     } else {
                         // Reset button
@@ -83,15 +88,16 @@ document.addEventListener('DOMContentLoaded', function() {
                         submitBtn.disabled = false;
                         
                         // Show login error
-                        alert('Invalid email or password. Please try again.');
+                        alert('Invalid username or password. Please try again.');
                     }
                 })
-                .catch(() => {
+                .catch((error) => {
                     // Reset button
                     submitBtn.innerHTML = originalBtnText;
                     submitBtn.disabled = false;
                     
-                    alert('Login failed. Please try again.');
+                    console.error('Login error:', error);
+                    alert(error.message || 'Login failed. Please try again.');
                 });
             }
         });
@@ -108,7 +114,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (userString) {
             try {
                 const user = JSON.parse(userString);
-                const name = user.name || user.email || '';
+                const name = user.name || user.username || '';
                 const nameSpan = document.getElementById('currentUserName');
                 if (nameSpan) {
                     nameSpan.textContent = name;
@@ -228,12 +234,10 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Fetch user permissions from the server
-async function fetchUserPermissions(token) {
+async function fetchUserPermissions() {
     try {
         const response = await fetch(`${API_CONFIG.BASE_URL}/user-permissions/`, {
-            headers: {
-                'Authorization': `Token ${token}`
-            }
+            credentials: 'include'  // Include cookies for session authentication
         });
         
         if (response.ok) {

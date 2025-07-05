@@ -131,11 +131,13 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-FORCE_SCRIPT_NAME = '/imstransform'
-STATIC_URL = '/imstransform/static/'
+# Remove FORCE_SCRIPT_NAME to use standard Django URL handling
+# FORCE_SCRIPT_NAME = '/imstransform'
+
+STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-MEDIA_URL = '/imstransform/media/'
+MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # Frontend files
@@ -158,9 +160,15 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
+        'rest_framework.permissions.AllowAny',  # Allow all requests by default
     ],
 }
+
+# REST Framework Token Authentication
+REST_FRAMEWORK_TOKEN_EXPIRE_HOURS = 24  # Token expiry time in hours
+
+# CSRF settings - exempt the token auth endpoint
+CSRF_EXEMPT_URLS = [r'^api-token-auth/']
 
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
@@ -170,5 +178,8 @@ AUTHENTICATION_BACKENDS = [
 # CORS settings
 CORS_ALLOW_ALL_ORIGINS = DEBUG  # Only allow all origins in development
 
+# CSRF settings
+CSRF_TRUSTED_ORIGINS = ['http://localhost:8000', 'http://127.0.0.1:8000']
+
 # If you want to serve at a subpath (e.g., /qbitxims), uncomment:
-FORCE_SCRIPT_NAME = '/imstransform'
+# FORCE_SCRIPT_NAME = '/imstransform'  # Already defined above

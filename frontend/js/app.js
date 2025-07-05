@@ -73,17 +73,10 @@ async function fetchAPI(endpoint, options = {}) {
         const url = `${baseUrl}${endpoint}`;
         console.log(`API Request: ${url}`, options);
         
-        // Get auth token from localStorage - check both possible token names
-        const authToken = localStorage.getItem('auth_token') || localStorage.getItem('authToken');
-        
-        // Create headers with authentication if token exists
+        // Create headers without token authentication
         let headers = {
             'Content-Type': 'application/json'
         };
-        
-        if (authToken) {
-            headers['Authorization'] = `Token ${authToken}`;
-        }
         
         // Merge provided options with headers
         const finalOptions = {
@@ -91,7 +84,8 @@ async function fetchAPI(endpoint, options = {}) {
             headers: {
                 ...headers,
                 ...(options.headers || {})
-            }
+            },
+            credentials: 'include'  // Include cookies for session authentication
         };
         
         const response = await fetch(url, finalOptions);
@@ -99,10 +93,9 @@ async function fetchAPI(endpoint, options = {}) {
         // Handle unauthorized responses
         if (response.status === 401) {
             console.error('Authentication failed. Redirecting to login page.');
-            localStorage.removeItem('authToken');
             localStorage.removeItem('isAuthenticated');
             localStorage.removeItem('currentUser');
-            window.location.href = 'login.html';
+            window.location.href = 'index.html';
             return null;
         }
         
@@ -241,18 +234,13 @@ async function deleteProduct(id) {
 
 // Helper function to get stock history
 async function getStockHistory() {
-    console.log('Getting stock history with token:', localStorage.getItem('auth_token') || localStorage.getItem('authToken'));
+    console.log('Getting stock history');
     try {
         const data = await fetchAPI(API_CONFIG.ENDPOINTS.STOCK_HISTORY);
         console.log('Stock history data fetched successfully:', data ? `${data.length} items` : 'No data');
         return data;
     } catch (error) {
         console.error('Error fetching stock history:', error);
-        // Fall back to mock data if available
-        if (window.MOCK_STOCK_HISTORY) {
-            console.log('Using mock stock history data instead');
-            return [...window.MOCK_STOCK_HISTORY];
-        }
         throw error;
     }
 }

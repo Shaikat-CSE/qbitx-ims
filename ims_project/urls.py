@@ -15,17 +15,19 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
 from django.views.generic import TemplateView
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic.base import RedirectView
-from rest_framework.authtoken.views import obtain_auth_token
+from django.views.decorators.csrf import csrf_exempt
+from inventory.views import simple_login
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('inventory.urls')),
-    path('api-token-auth/', obtain_auth_token, name='api_token_auth'),
+    path('api-token-auth/', csrf_exempt(simple_login), name='api_token_auth'),  # Use simple login for compatibility
+    path('login/', csrf_exempt(simple_login), name='simple_login'),  # Add a dedicated login endpoint
     
     # Frontend URLs
     path('', RedirectView.as_view(url='/app/'), name='index'),
@@ -35,3 +37,4 @@ urlpatterns = [
 # Add static file serving in development
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
