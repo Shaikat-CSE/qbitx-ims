@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+
+# Django
+*.log
+*.pot
+*.pyc
+*.pyo
+*.db
+*.sqlite3
+/staticfiles/
+/media/
+
+# Environment
+.env
+.env.*
+
+# VSCode
+.vscode/
+
+# System
+.DS_Store
+Thumbs.db
+
+# Gunicorn/Nginx
+*.sock
+*.pid
+*.service
+
+# Node/npm (if any frontend build)
+node_modules/
+
+# Backup
+*.bak
+*.swp

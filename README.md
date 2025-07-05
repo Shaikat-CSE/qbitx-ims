@@ -1,78 +1,46 @@
-# QBITX IMS Transform Suppliers
+# QBITX IMS (Inventory Management System)
 
-A Django-based Inventory Management System (IMS) for suppliers and clients, with a modern frontend and REST API.
+Production-ready Django REST + Nginx + Gunicorn deployment for Hostinger VPS.
 
 ## Features
-- Product, stock, supplier, and client management
-- Custom reports and export (CSV, Excel, PDF)
-- Role-based permissions
-- Responsive Bootstrap 5 frontend
-- Token-based authentication (DRF)
+- Django 5.x, REST API, CORS, Token Auth
+- SQLite (easy to switch to PostgreSQL/MySQL)
+- Static/media served via Nginx
+- Environment-based secrets/config
+- Example Gunicorn and Nginx configs for subpath deployment
 
-## Deployment: VPS at `/imstransform`
+## Deployment Steps
 
-### 1. Clone the Repository
-```sh
-git clone <your-repo-url>
-cd django_ims
-```
+1. **Clone the repo:**
+   ```sh
+   git clone https://github.com/Shaikat-CSE/qbitx-ims.git
+   cd qbitx-ims
+   ```
+2. **Copy and edit environment/config files:**
+   ```sh
+   cp .env.example .env
+   # Edit .env for your secrets and settings
+   cp gunicorn_imstransform.service.example gunicorn_imstransform.service
+   cp nginx_django_ims_port8080.conf.example nginx_django_ims_port8080.conf
+   ```
+3. **Deploy using the script:**
+   ```sh
+   bash deploy_imstransform.sh
+   ```
+4. **(On VPS) Enable Gunicorn and Nginx configs:**
+   - Copy `gunicorn_imstransform.service` to `/etc/systemd/system/`
+   - Copy `nginx_django_ims_port8080.conf` to `/etc/nginx/sites-available/` and symlink to `sites-enabled/`
+   - Reload/restart services as needed
 
-### 2. Configure Django Settings
-- Edit `ims_project/settings.py`:
-  - `ALLOWED_HOSTS = ['69.62.75.219', 'localhost', '127.0.0.1']`
-  - `FORCE_SCRIPT_NAME = '/imstransform'`
-  - `STATIC_URL = '/imstransform/static/'`
-  - `MEDIA_URL = '/imstransform/media/'`
-  - `STATIC_ROOT = BASE_DIR / 'staticfiles'`
-  - `MEDIA_ROOT = BASE_DIR / 'media'`
+## Security Notes
+- Never commit `.env` or real secrets to the repo.
+- Restrict CORS in production.
+- Use HTTPS in production.
 
-### 3. Install System Dependencies
-```sh
-sudo apt update && sudo apt upgrade -y
-sudo apt install python3 python3-venv python3-pip git nginx -y
-```
-
-### 4. Automated Deployment
-Run the provided script:
-```sh
-chmod +x deploy_imstransform.sh
-./deploy_imstransform.sh
-```
-- This will set up the virtual environment, install requirements, collect static files, run migrations, configure Gunicorn and Nginx, and open port 8080.
-
-### 5. Access the Application
-- Visit: [http://69.62.75.219:8080/imstransform](http://69.62.75.219:8080/imstransform)
-
-### 6. Default Admin
-- Create a superuser if needed:
-```sh
-source venv/bin/activate
-python manage.py createsuperuser
-```
-- Admin panel: `/imstransform/admin/`
-
-### 7. Notes
-- All frontend and API URLs must be prefixed with `/imstransform/`.
-- For production, ensure `DEBUG = False` and use strong, secret keys.
-- For HTTPS, set up SSL with Nginx and update the server config.
+## For Developers
+- All config templates are provided as `.example` files.
+- See `deploy_imstransform.sh` for the full deployment workflow.
 
 ---
 
-## Project Structure
-```
-django_ims/
-├── ims_project/           # Django project settings
-├── inventory/             # Main app
-├── frontend/              # HTML, JS, CSS
-├── staticfiles/           # Collected static files
-├── media/                 # Uploaded media files
-├── requirements.txt
-├── deploy_imstransform.sh # Automated deployment script
-├── gunicorn.service.example
-├── nginx_django_ims_port8080.conf.example
-└── README.md
-```
-
-## License
-MIT (or your chosen license)
-# qbitx-ims
+For more details, see comments in `settings.py` and the deployment script.

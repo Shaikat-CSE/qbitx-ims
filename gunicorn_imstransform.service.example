@@ -1,0 +1,14 @@
+[Unit]
+Description=Gunicorn instance to serve imstransform
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/qbitx-ims
+Environment="DJANGO_SETTINGS_MODULE=ims_project.settings"
+EnvironmentFile=/var/www/qbitx-ims/.env
+ExecStart=/var/www/qbitx-ims/venv/bin/gunicorn --access-logfile - --workers 3 --bind unix:/run/imstransform.sock ims_project.wsgi:application
+
+[Install]
+WantedBy=multi-user.target

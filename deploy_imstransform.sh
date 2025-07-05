@@ -40,10 +40,10 @@ $PYTHON_BIN manage.py migrate
 
 # === GUNICORN SYSTEMD SERVICE ===
 echo "[5/7] Setting up Gunicorn systemd service..."
-sudo cp gunicorn.service.example /etc/systemd/system/gunicorn.service
+sudo cp gunicorn_imstransform.service.example /etc/systemd/system/imstransform.service
 sudo systemctl daemon-reload
-sudo systemctl restart gunicorn
-sudo systemctl enable gunicorn
+sudo systemctl restart imstransform
+sudo systemctl enable imstransform
 
 # === NGINX CONFIGURATION ===
 echo "[6/7] Configuring Nginx..."
@@ -58,4 +58,4 @@ sudo ufw allow 8080
 
 # === DONE ===
 echo "Deployment complete!"
-echo "Visit: http://$VPS_IP:8080/imstransform" 
+echo "Visit: http://$VPS_IP:8080/imstransform"

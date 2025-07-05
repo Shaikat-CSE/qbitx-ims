@@ -2,16 +2,20 @@ server {
     listen 8080;
     server_name 69.62.75.219;
 
-    location = /favicon.ico { access_log off; log_not_found off; }
-    location /static/ {
-        alias /home/yourusername/django_ims/staticfiles/;
-    }
-    location /media/ {
-        alias /home/yourusername/django_ims/media/;
-    }
+    client_max_body_size 20M;
 
-    location / {
-        include proxy_params;
-        proxy_pass http://unix:/home/yourusername/django_ims/gunicorn.sock;
+    location /imstransform/static/ {
+        alias /var/www/qbitx-ims/staticfiles/;
     }
-} 
+    location /imstransform/media/ {
+        alias /var/www/qbitx-ims/media/;
+    }
+    location /imstransform/ {
+        proxy_pass http://unix:/run/imstransform.sock;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_redirect off;
+    }
+}

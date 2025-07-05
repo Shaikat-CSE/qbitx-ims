@@ -3,4 +3,5 @@ Django==5.2.1
 django-cors-headers==4.7.0
 djangorestframework==3.16.0
 gunicorn==21.2.0
+python-dotenv
 sqlparse==0.5.3
