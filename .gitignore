@@ -16,8 +16,8 @@ __pycache__/
 /media/
 
 # Environment
-.env
-.env.*
+# .env
+# .env.*
 
 # VSCode
 .vscode/
