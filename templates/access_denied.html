@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Access Denied{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Access Denied</h4>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <img src="{% static 'img/access-denied.png' %}" alt="Access Denied" class="img-fluid" style="max-width: 150px;">
+                    </div>
+                    <div class="alert alert-danger">
+                        <p class="mb-0"><strong>You don't have permission to access this page.</strong></p>
+                        <p class="mb-0">Required permission: {{ permission }}</p>
+                    </div>
+                    <p class="text-center">Please contact your system administrator to request access to this feature.</p>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'dashboard' %}" class="btn btn-primary">
+                            <i class="fas fa-home me-2"></i>Return to Dashboard
+                        </a>
+                        {% if user.is_authenticated %}
+                        <a href="{% url 'logout' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-sign-out-alt me-2"></i>Log Out
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

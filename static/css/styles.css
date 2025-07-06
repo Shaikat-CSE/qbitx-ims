@@ -1,0 +1,447 @@
+/* styles.css - Custom styles for QBITX IMS Transform Suppliers */
+
+/* Global Styles */
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #f8f9fa;
+}
+
+/* Profit Margin Styles */
+.text-danger {
+    font-weight: 500;
+}
+
+.text-warning {
+    font-weight: 500;
+}
+
+.text-success {
+    font-weight: 500;
+}
+
+/* Sidebar Styles */
+.sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 100;
+    padding: 48px 0 0;
+    box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+}
+
+.sidebar .nav-link {
+    font-weight: 500;
+    color: #f8f9fa;
+    padding: 0.75rem 1rem;
+    margin: 0.2rem 0;
+}
+
+.sidebar .nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar .nav-link.active {
+    color: #ffc107;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar .nav-link i {
+    margin-right: 0.5rem;
+}
+
+/* Navbar Styles */
+.navbar-brand {
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.navbar-brand span {
+    color: #ffc107;
+}
+
+/* Main Content Styles */
+.main-content {
+    padding-top: 1.5rem;
+}
+
+/* Card Styles */
+.card {
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-bottom: 1.5rem;
+}
+
+.card-header {
+    background-color: #fff;
+    border-bottom: 1px solid #eee;
+    font-weight: 500;
+}
+
+.card-stats {
+    height: 100%;
+}
+
+.card-title {
+    font-size: 0.85rem;
+    color: #6c757d;
+    margin-bottom: 0.5rem;
+}
+
+.card-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+}
+
+.card-icon {
+    font-size: 2rem;
+    margin-top: 0.5rem;
+}
+
+/* Low Stock Table Styles */
+.low-stock {
+    background-color: rgba(255, 193, 7, 0.1);
+}
+
+/* Form Styles */
+.form-error {
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+/* Login Page Styles */
+.login-container {
+    max-width: 400px;
+    margin: 100px auto;
+    padding: 2rem;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.company-logo {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.company-name {
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+/* Media Queries */
+@media (max-width: 767.98px) {
+    .sidebar {
+        top: 5rem;
+    }
+}
+
+/* Print styles for reports */
+@media print {
+    /* Hide unnecessary elements when printing */
+    header, nav, footer, .sidebar, .btn-toolbar, #reportForm, #modifyReportBtn {
+        display: none !important;
+    }
+    
+    /* Make sure the report content is visible */
+    #reportResults {
+        display: block !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
+    /* Ensure proper page breaks */
+    .card {
+        page-break-inside: avoid;
+        margin-bottom: 20px !important;
+    }
+    
+    /* Chart container */
+    #customReportChartContainer {
+        page-break-inside: avoid;
+        margin-bottom: 30px !important;
+    }
+    
+    /* Table styling */
+    .table {
+        border-collapse: collapse !important;
+        width: 100% !important;
+    }
+    
+    .table th, .table td {
+        border: 1px solid #ddd !important;
+        padding: 6px !important;
+        font-size: 11px !important;
+    }
+    
+    /* Print header */
+    .print-only {
+        display: block !important;
+    }
+    
+    /* Set landscape orientation */
+    @page {
+        size: landscape;
+        margin: 1cm;
+    }
+    
+    /* Ensure white background */
+    body {
+        background-color: white !important;
+    }
+    
+    /* Make text black for better printing */
+    body, h1, h2, h3, h4, h5, h6, p, td, th {
+        color: black !important;
+    }
+    
+    /* Ensure proper styling for cards */
+    .card {
+        border: 1px solid #ddd !important;
+    }
+    
+    .card-header {
+        background-color: #f8f9fa !important;
+        border-bottom: 1px solid #ddd !important;
+    }
+    
+    /* Make sure all content is visible */
+    .main-content {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+}
+
+/* Dashboard Specific Styles */
+.dashboard-card {
+    transition: all 0.3s ease;
+    border: none;
+    overflow: hidden;
+    position: relative;
+    border-radius: 12px;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+}
+
+.dashboard-card .card-body {
+    position: relative;
+    z-index: 1;
+}
+
+.dashboard-card h4.card-title {
+    font-size: 1.1rem;
+    font-weight: 500;
+    margin-bottom: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: white !important;
+}
+
+.dashboard-card .display-4 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.dashboard-card .card-text {
+    font-size: 0.8rem;
+    opacity: 0.8;
+}
+
+/* Card background gradients */
+.bg-primary.dashboard-card {
+    background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+}
+
+.bg-success.dashboard-card {
+    background: linear-gradient(135deg, #1cc88a 0%, #13855c 100%);
+}
+
+.bg-danger.dashboard-card {
+    background: linear-gradient(135deg, #e74a3b 0%, #be2617 100%);
+}
+
+.bg-secondary.dashboard-card {
+    background: linear-gradient(135deg, #6f42c1 0%, #4e2b89 100%);
+}
+
+/* Card decorative elements */
+.dashboard-card::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    background: rgba(255, 255, 255, 0.1);
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    z-index: 0;
+}
+
+.dashboard-card::after {
+    content: '';
+    position: absolute;
+    bottom: -20px;
+    left: -20px;
+    background: rgba(255, 255, 255, 0.05);
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    z-index: 0;
+}
+
+/* Chart container styles */
+.chart-container {
+    position: relative;
+    height: 350px;
+    width: 100%;
+    padding: 10px;
+}
+
+/* Make category pie chart container taller */
+.card:has(#categoryPieChart) .chart-container {
+    height: 400px;
+}
+
+.card .card-body {
+    padding: 1.5rem;
+}
+
+.card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+}
+
+.card .card-title {
+    font-weight: 600;
+    color: #4e73df;
+    margin-bottom: 1.25rem;
+    font-size: 1rem;
+    border-bottom: 1px solid #f0f0f0;
+    padding-bottom: 0.75rem;
+}
+
+/* Top products table */
+.top-products-table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.top-products-table th {
+    font-weight: 600;
+    font-size: 0.85rem;
+    background-color: #f8f9fa;
+    color: #4e73df;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 0.75rem;
+    border-bottom: 2px solid #e3e6f0;
+}
+
+.top-products-table td {
+    font-size: 0.85rem;
+    vertical-align: middle;
+    padding: 0.75rem;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.top-products-table tr:hover {
+    background-color: #f8f9fc;
+}
+
+/* Search and entries controls */
+.table-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding: 0.5rem 0;
+}
+
+.table-controls .form-select, 
+.table-controls .form-control {
+    max-width: 150px;
+    border-radius: 20px;
+    border: 1px solid #e3e6f0;
+    box-shadow: none;
+    font-size: 0.85rem;
+}
+
+.table-controls .form-control:focus,
+.table-controls .form-select:focus {
+    border-color: #4e73df;
+    box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+}
+
+/* Current date display */
+.current-date {
+    background-color: #f8f9fa;
+    border-left: 4px solid #4e73df;
+    padding: 0.75rem 1.25rem;
+    margin-bottom: 1.5rem;
+    border-radius: 0 8px 8px 0;
+    font-weight: 500;
+    color: #5a5c69;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.current-date i {
+    color: #4e73df;
+}
+
+/* Permission lock icons */
+.permission-lock-icon {
+    display: inline-block;
+    margin-left: 5px;
+    color: #dc3545;
+}
+
+button:not(.disabled) .permission-lock-icon,
+a:not(.disabled) .permission-lock-icon {
+    display: none;
+}
+
+button.disabled,
+a.disabled {
+    opacity: 0.6;
+    cursor: not-allowed !important;
+    pointer-events: none;
+}
+
+.dropdown-item.disabled {
+    color: #6c757d;
+    background-color: transparent;
+    cursor: not-allowed;
+}
+
+/* Tooltips for disabled elements */
+button.disabled[title]:hover::after,
+a.disabled[title]:hover::after {
+    content: attr(title);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 1000;
+    margin-bottom: 5px;
+} 

@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Invoice #{{ invoice.invoice_number }}</title>
+    <style>
+        @page {
+            size: a4 portrait;
+            margin: 1cm;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 10pt;
+            color: #333333;
+            line-height: 1.2;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        .company-name {
+            font-size: 18pt;
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+        .company-tagline {
+            font-size: 12pt;
+            margin-bottom: 5px;
+        }
+        .company-details {
+            font-size: 9pt;
+        }
+        .invoice-info {
+            margin-bottom: 15px;
+        }
+        .invoice-title {
+            font-size: 16pt;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .invoice-details {
+            width: 100%;
+            margin-bottom: 15px;
+        }
+        .invoice-details td {
+            padding: 3px;
+            vertical-align: top;
+        }
+        .client-details {
+            width: 50%;
+            font-size: 9pt;
+        }
+        .invoice-number {
+            width: 50%;
+            text-align: right;
+            font-size: 9pt;
+        }
+        table.items {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+        table.items th, table.items td {
+            border: 1px solid #ddd;
+            padding: 5px;
+            text-align: left;
+            font-size: 9pt;
+        }
+        table.items th {
+            background-color: #f2f2f2;
+        }
+        .text-right {
+            text-align: right;
+        }
+        .total-section {
+            width: 100%;
+            margin-top: 10px;
+        }
+        .total-section td {
+            padding: 3px;
+        }
+        .total-label {
+            text-align: right;
+            font-weight: bold;
+            width: 80%;
+        }
+        .total-value {
+            text-align: right;
+            width: 20%;
+        }
+        .grand-total {
+            font-size: 12pt;
+            font-weight: bold;
+        }
+        .terms {
+            margin-top: 15px;
+            border-top: 1px solid #ddd;
+            padding-top: 10px;
+            font-size: 8pt;
+        }
+        .terms-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .terms ol {
+            margin: 0;
+            padding-left: 15px;
+        }
+        .footer {
+            margin-top: 15px;
+            text-align: center;
+            font-size: 8pt;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="company-name">{{ company_name|default:"QBITX IMS" }}</div>
+        <div class="company-tagline">{{ company_tagline|default:"Transform Suppliers" }}</div>
+        <div class="company-details">
+            {{ company_details|default:"123 Business Street, Business City, Country<br>Phone: (123) 456-7890 | Email: info@qbitx-ims.com"|safe }}
+        </div>
+    </div>
+    
+    <div class="invoice-info">
+        <div class="invoice-title">INVOICE</div>
+        <table class="invoice-details">
+            <tr>
+                <td class="client-details">
+                    <strong>Bill To:</strong><br>
+                    {{ invoice.client.name }}<br>
+                    {% if invoice.client.contact_person %}{{ invoice.client.contact_person }}<br>{% endif %}
+                    {% if invoice.client.address %}{{ invoice.client.address }}<br>{% endif %}
+                    {% if invoice.client.city %}{{ invoice.client.city }}{% if invoice.client.country %}, {{ invoice.client.country }}{% endif %}<br>{% endif %}
+                    {% if invoice.client.phone %}Phone: {{ invoice.client.phone }}<br>{% endif %}
+                    {% if invoice.client.email %}Email: {{ invoice.client.email }}{% endif %}
+                </td>
+                <td class="invoice-number">
+                    <strong>Invoice Number:</strong> {{ invoice.invoice_number }}<br>
+                    <strong>Issue Date:</strong> {{ invoice.issue_date|date:"F j, Y" }}<br>
+                    <strong>Due Date:</strong> {{ invoice.due_date|date:"F j, Y" }}<br>
+                    <strong>Status:</strong> 
+                    {% if invoice.status == 'pending' %}
+                        Pending
+                    {% elif invoice.status == 'paid' %}
+                        Paid
+                    {% elif invoice.status == 'cancelled' %}
+                        Cancelled
+                    {% endif %}
+                </td>
+            </tr>
+        </table>
+    </div>
+    
+    <table class="items">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Product</th>
+                <th>Quantity</th>
+                <th>Unit Price</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in invoice.items.all %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ item.product.name }}</td>
+                <td>{{ item.quantity }}</td>
+                <td class="text-right">{{ item.unit_price }}</td>
+                <td class="text-right">{{ item.total_price }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <table class="total-section">
+        <tr>
+            <td class="total-label">Subtotal:</td>
+            <td class="total-value">{{ invoice.subtotal }}</td>
+        </tr>
+        <tr>
+            <td class="total-label">Tax ({{ invoice.tax_rate }}%):</td>
+            <td class="total-value">{{ invoice.tax_amount }}</td>
+        </tr>
+        <tr>
+            <td class="total-label">Discount:</td>
+            <td class="total-value">{{ invoice.discount }}</td>
+        </tr>
+        <tr class="grand-total">
+            <td class="total-label">Total:</td>
+            <td class="total-value">{{ invoice.total }}</td>
+        </tr>
+    </table>
+    
+    {% if invoice.notes %}
+    <div style="font-size: 9pt;">
+        <strong>Notes:</strong>
+        <p>{{ invoice.notes }}</p>
+    </div>
+    {% endif %}
+    
+    <div class="terms">
+        <div class="terms-title">Terms and Conditions</div>
+        {% if terms_conditions %}
+            <p>{{ terms_conditions|linebreaks }}</p>
+        {% else %}
+        <ol>
+            <li>Payment is due within {{ invoice.due_date|timeuntil:invoice.issue_date }} of invoice date.</li>
+            <li>Please make payment via bank transfer or check.</li>
+            <li>Late payments are subject to a 2% monthly fee.</li>
+            <li>For questions regarding this invoice, please contact our accounting department.</li>
+        </ol>
+        {% endif %}
+    </div>
+    
+    <div class="footer">
+        <p>Thank you for your business!</p>
+        <p>QBITX Inventory Management System &copy; {% now "Y" %}</p>
+    </div>
+</body>
+</html> 

@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if product %}Edit Product{% else %}Add New Product{% endif %} - QBITX IMS Transform Suppliers{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">{% if product %}Edit Product{% else %}Add New Product{% endif %}</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{% url 'products' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Products
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                {% for error in form.non_field_errors %}
+                {{ error }}
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="{{ form.name.id_for_label }}" class="form-label">Product Name</label>
+                        {{ form.name }}
+                        {% if form.name.errors %}
+                        <div class="text-danger">{{ form.name.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="{{ form.sku.id_for_label }}" class="form-label">SKU</label>
+                        {{ form.sku }}
+                        {% if form.sku.errors %}
+                        <div class="text-danger">{{ form.sku.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="{{ form.category.id_for_label }}" class="form-label">Category</label>
+                        {{ form.category }}
+                        {% if form.category.errors %}
+                        <div class="text-danger">{{ form.category.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="{{ form.supplier.id_for_label }}" class="form-label">Supplier</label>
+                        {{ form.supplier }}
+                        {% if form.supplier.errors %}
+                        <div class="text-danger">{{ form.supplier.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <div class="mb-3">
+                        <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                        <div class="text-danger">{{ form.description.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="{{ form.buying_price.id_for_label }}" class="form-label">Buying Price</label>
+                        {{ form.buying_price }}
+                        {% if form.buying_price.errors %}
+                        <div class="text-danger">{{ form.buying_price.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="{{ form.selling_price.id_for_label }}" class="form-label">Selling Price</label>
+                        {{ form.selling_price }}
+                        {% if form.selling_price.errors %}
+                        <div class="text-danger">{{ form.selling_price.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="{{ form.unit_of_measure.id_for_label }}" class="form-label">Unit of Measure</label>
+                        {{ form.unit_of_measure }}
+                        {% if form.unit_of_measure.errors %}
+                        <div class="text-danger">{{ form.unit_of_measure.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="{{ form.quantity.id_for_label }}" class="form-label">Initial Quantity</label>
+                        {{ form.quantity }}
+                        {% if form.quantity.errors %}
+                        <div class="text-danger">{{ form.quantity.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="{{ form.reorder_level.id_for_label }}" class="form-label">Reorder Level</label>
+                        {{ form.reorder_level }}
+                        {% if form.reorder_level.errors %}
+                        <div class="text-danger">{{ form.reorder_level.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="{{ form.expiry_date.id_for_label }}" class="form-label">Expiry Date</label>
+                        {{ form.expiry_date }}
+                        {% if form.expiry_date.errors %}
+                        <div class="text-danger">{{ form.expiry_date.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="{{ form.shipment_number.id_for_label }}" class="form-label">Shipment Number</label>
+                        {{ form.shipment_number }}
+                        {% if form.shipment_number.errors %}
+                        <div class="text-danger">{{ form.shipment_number.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="{{ form.location.id_for_label }}" class="form-label">Storage Location</label>
+                        {{ form.location }}
+                        {% if form.location.errors %}
+                        <div class="text-danger">{{ form.location.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> {% if product %}Update{% else %}Save{% endif %} Product
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

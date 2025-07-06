@@ -1,0 +1,14 @@
+[Unit]
+Description=Gunicorn daemon for qbitx-ims
+After=network.target
+
+[Service]
+User=root
+Group=www-data
+WorkingDirectory=/var/www/imstransform/qbitx-ims
+ExecStart=/var/www/imstransform/venv/bin/gunicorn --config /var/www/imstransform/qbitx-ims/gunicorn_config.py qbitx_ims.wsgi:application
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target 

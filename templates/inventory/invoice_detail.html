@@ -1,0 +1,287 @@
+{% extends 'base.html' %}
+
+{% block title %}Invoice #{{ invoice.invoice_number }} - QBITX IMS Transform Suppliers{% endblock %}
+
+{% block extra_css %}
+<style>
+    @media print {
+        .no-print {
+            display: none !important;
+        }
+        body {
+            padding: 0;
+            margin: 0;
+        }
+        .print-container {
+            width: 100%;
+            max-width: 100%;
+        }
+        .invoice-card {
+            border: none !important;
+            box-shadow: none !important;
+        }
+    }
+    .invoice-header {
+        border-bottom: 2px solid #f8f9fa;
+        padding-bottom: 20px;
+        margin-bottom: 20px;
+    }
+    .invoice-footer {
+        border-top: 2px solid #f8f9fa;
+        padding-top: 20px;
+        margin-top: 20px;
+    }
+    .company-logo {
+        text-align: center;
+        margin-bottom: 15px;
+    }
+    .invoice-title {
+        color: #495057;
+        font-size: 28px;
+        font-weight: 700;
+    }
+    .invoice-details {
+        margin-bottom: 30px;
+    }
+    .invoice-details-label {
+        font-weight: 600;
+        color: #6c757d;
+    }
+    .invoice-table th {
+        background-color: #f8f9fa;
+    }
+    .invoice-total {
+        text-align: right;
+        margin-top: 30px;
+    }
+    .invoice-total-row {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 5px;
+    }
+    .invoice-total-label {
+        font-weight: 600;
+        width: 150px;
+        text-align: right;
+        margin-right: 20px;
+    }
+    .invoice-total-value {
+        width: 100px;
+        text-align: right;
+    }
+    .invoice-notes {
+        margin-top: 30px;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-radius: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom no-print">
+    <h1 class="h2">Invoice #{{ invoice.invoice_number }}</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <button class="btn btn-outline-primary download-pdf-btn" data-invoice-id="{{ invoice.id }}">
+                <i class="fas fa-file-pdf"></i> Download PDF
+            </button>
+        </div>
+        <a href="{% url 'invoices' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Invoices
+        </a>
+    </div>
+</div>
+
+<div class="print-container">
+    <div class="card invoice-card">
+        <div class="card-body">
+            <div class="invoice-header">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="company-logo">
+                            <i class="fas fa-boxes fa-3x text-primary"></i>
+                            <h3>QBITX IMS</h3>
+                            <p class="text-muted">Transform Suppliers</p>
+                        </div>
+                        <div>
+                            <p>123 Business Street<br>
+                            Business City, Country<br>
+                            Phone: (123) 456-7890<br>
+                            Email: info@qbitx-ims.com</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6 text-md-end">
+                        <h1 class="invoice-title">INVOICE</h1>
+                        <div class="invoice-details">
+                            <div><span class="invoice-details-label">Invoice Number:</span> {{ invoice.invoice_number }}</div>
+                            <div><span class="invoice-details-label">Issue Date:</span> {{ invoice.issue_date }}</div>
+                            <div><span class="invoice-details-label">Due Date:</span> {{ invoice.due_date }}</div>
+                            <div><span class="invoice-details-label">Status:</span> 
+                                {% if invoice.status == 'pending' %}
+                                <span class="badge bg-warning text-dark">Pending</span>
+                                {% elif invoice.status == 'paid' %}
+                                <span class="badge bg-success">Paid</span>
+                                {% elif invoice.status == 'cancelled' %}
+                                <span class="badge bg-danger">Cancelled</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h5>Bill To:</h5>
+                    <div>
+                        <strong>{{ invoice.client.name }}</strong><br>
+                        {% if invoice.client.contact_person %}{{ invoice.client.contact_person }}<br>{% endif %}
+                        {% if invoice.client.address %}{{ invoice.client.address }}<br>{% endif %}
+                        {% if invoice.client.city %}{{ invoice.client.city }}{% if invoice.client.country %}, {{ invoice.client.country }}{% endif %}<br>{% endif %}
+                        {% if invoice.client.phone %}Phone: {{ invoice.client.phone }}<br>{% endif %}
+                        {% if invoice.client.email %}Email: {{ invoice.client.email }}{% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-striped invoice-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Product</th>
+                            <th>Quantity</th>
+                            <th>Unit Price</th>
+                            <th class="text-end">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in invoice.items.all %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ item.product.name }}</td>
+                            <td>{{ item.quantity }}</td>
+                            <td>{{ item.unit_price }}</td>
+                            <td class="text-end">{{ item.total_price }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center">No items in this invoice.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="invoice-total">
+                <div class="invoice-total-row">
+                    <div class="invoice-total-label">Subtotal:</div>
+                    <div class="invoice-total-value">{{ invoice.subtotal }}</div>
+                </div>
+                <div class="invoice-total-row">
+                    <div class="invoice-total-label">Tax ({{ invoice.tax_rate }}%):</div>
+                    <div class="invoice-total-value">{{ invoice.tax_amount }}</div>
+                </div>
+                <div class="invoice-total-row">
+                    <div class="invoice-total-label">Discount:</div>
+                    <div class="invoice-total-value">{{ invoice.discount }}</div>
+                </div>
+                <div class="invoice-total-row">
+                    <div class="invoice-total-label"><strong>Total:</strong></div>
+                    <div class="invoice-total-value"><strong>{{ invoice.total }}</strong></div>
+                </div>
+            </div>
+            
+            {% if invoice.notes %}
+            <div class="invoice-notes">
+                <h6>Notes:</h6>
+                <p>{{ invoice.notes }}</p>
+            </div>
+            {% endif %}
+            
+            <div class="invoice-footer text-center">
+                <p>Thank you for your business!</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Auto-print if print parameter is present
+        if (window.location.search.includes('print=true')) {
+            window.print();
+        }
+    });
+</script>
+
+<!-- PDF Customization Modal -->
+<div class="modal fade" id="pdfCustomizationModal" tabindex="-1" role="dialog" aria-labelledby="pdfCustomizationModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="pdfCustomizationModalLabel">Customize PDF Invoice</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form action="{% url 'customize_pdf' %}" method="post">
+        {% csrf_token %}
+        <div class="modal-body">
+          <input type="hidden" name="pdf_type" id="pdf_type" value="invoice">
+          <input type="hidden" name="item_id" id="item_id" value="">
+          
+          <div class="form-group">
+            <label for="company_name">Company Name</label>
+            <input type="text" class="form-control" id="company_name" name="company_name" value="QBITX IMS">
+          </div>
+          
+          <div class="form-group">
+            <label for="company_tagline">Company Tagline</label>
+            <input type="text" class="form-control" id="company_tagline" name="company_tagline" value="Transform Suppliers">
+          </div>
+          
+          <div class="form-group">
+            <label for="company_details">Company Details</label>
+            <textarea class="form-control" id="company_details" name="company_details" rows="3">123 Business Street, Business City, Country
+Phone: (123) 456-7890 | Email: info@qbitx-ims.com</textarea>
+          </div>
+          
+          <div class="form-group">
+            <label for="terms_conditions">Terms and Conditions</label>
+            <textarea class="form-control" id="terms_conditions" name="terms_conditions" rows="5">1. Payment is due within {{ invoice.due_date|timeuntil:invoice.issue_date }} of invoice date.
+2. Please make payment via bank transfer or check.
+3. Late payments are subject to a 2% monthly fee.
+4. For questions regarding this invoice, please contact our accounting department.</textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Generate PDF</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // When download PDF button is clicked
+    var downloadButtons = document.querySelectorAll('.download-pdf-btn');
+    downloadButtons.forEach(function(button) {
+      button.addEventListener('click', function(e) {
+        e.preventDefault();
+        var invoiceId = this.getAttribute('data-invoice-id');
+        document.getElementById('pdf_type').value = 'invoice';
+        document.getElementById('item_id').value = invoiceId;
+        
+        // Show the modal using vanilla JS
+        var modal = document.getElementById('pdfCustomizationModal');
+        var modalInstance = new bootstrap.Modal(modal);
+        modalInstance.show();
+      });
+    });
+  });
+</script>
+{% endblock %} 

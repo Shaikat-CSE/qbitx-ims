@@ -1,0 +1,415 @@
+{% load custom_filters %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+    <style>
+        @page {
+            size: a4 portrait;
+            margin: 1.5cm;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 9pt;
+            color: #333333;
+            line-height: 1.2;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        .company-name {
+            font-size: 16pt;
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+        .company-tagline {
+            font-size: 10pt;
+            margin-bottom: 5px;
+        }
+        .company-details {
+            font-size: 8pt;
+        }
+        .report-info {
+            margin-bottom: 15px;
+        }
+        .report-title {
+            font-size: 14pt;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 3px;
+        }
+        .report-subtitle {
+            font-size: 10pt;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+        .report-date {
+            font-size: 8pt;
+            text-align: center;
+        }
+        .filters-box {
+            border: 1px solid #ddd;
+            padding: 5px;
+            margin-bottom: 10px;
+            font-size: 8pt;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+            font-size: 7pt;
+        }
+        th, td {
+            border: 0.5px solid #ddd;
+            padding: 3px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        .text-right {
+            text-align: right;
+        }
+        .text-center {
+            text-align: center;
+        }
+        .total-row {
+            font-weight: bold;
+        }
+        .group-header {
+            background-color: #eee;
+            font-weight: bold;
+        }
+        .subtotal-row {
+            background-color: #f9f9f9;
+            font-style: italic;
+        }
+        .footer {
+            margin-top: 15px;
+            text-align: center;
+            font-size: 7pt;
+            color: #666;
+        }
+        .terms {
+            margin-top: 15px;
+            border-top: 1px solid #ddd;
+            padding-top: 10px;
+            font-size: 7pt;
+        }
+        .terms-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        /* Optimize table columns */
+        .col-date { width: 10%; }
+        .col-product { width: 15%; }
+        .col-qty { width: 5%; }
+        .col-uom { width: 5%; }
+        .col-price { width: 8%; }
+        .col-total { width: 8%; }
+        .col-client { width: 12%; }
+        .col-ref { width: 8%; }
+        .col-notes { width: 15%; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="company-name">{{ company_name|default:"QBITX IMS" }}</div>
+        <div class="company-tagline">{{ company_tagline|default:"Transform Suppliers" }}</div>
+        <div class="company-details">
+            {{ company_details|default:"123 Business Street, Business City, Country<br>Phone: (123) 456-7890 | Email: info@qbitx-ims.com"|safe }}
+        </div>
+    </div>
+
+    <div class="report-info">
+        <div class="report-title">{{ report_title }}</div>
+        <div class="report-subtitle">{{ report_subtitle }}</div>
+        <div class="report-date">Generated on: {{ generation_date }}</div>
+    </div>
+
+    {% if applied_filters %}
+    <div class="filters-box">
+        <strong>Applied Filters:</strong> {{ applied_filters }}
+    </div>
+    {% endif %}
+
+    {% if report_type == 'inventory' %}
+    <h2>{{ report_title }}</h2>
+    <p class="subtitle">{{ report_subtitle }}</p>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th>SKU</th>
+                <th>Category</th>
+                <th>Supplier</th>
+                <th>Quantity</th>
+                <th>Unit Price</th>
+                <th>Total Value</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for product in products %}
+            <tr>
+                <td>{{ product.name }}</td>
+                <td>{{ product.sku }}</td>
+                <td>{{ product.category.name }}</td>
+                <td>{% if product.supplier %}{{ product.supplier.name }}{% else %}-{% endif %}</td>
+                <td class="numeric">{{ product.quantity }}</td>
+                <td class="numeric">{{ product.buying_price }}</td>
+                <td class="numeric">{{ product.total_value|floatformat:2 }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="6" class="text-end"><strong>Total Inventory Value:</strong></td>
+                <td class="numeric"><strong>{{ total_value|floatformat:2 }}</strong></td>
+            </tr>
+        </tfoot>
+    </table>
+
+    {% elif report_type == 'sales' %}
+    <!-- Sales Report -->
+    <table>
+        <thead>
+            <tr>
+                <th class="col-date">Date</th>
+                <th class="col-product">Product</th>
+                <th class="col-qty text-right">Qty</th>
+                <th class="col-uom">UOM</th>
+                <th class="col-price text-right">Buying</th>
+                <th class="col-price text-right">Selling</th>
+                <th class="col-price text-right">Wastage</th>
+                <th class="col-total text-right">Total</th>
+                <th class="col-price text-right">Profit/Loss</th>
+                <th class="col-client">Client</th>
+                <th class="col-ref">Reference</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if grouped_data %}
+                {% for group in grouped_data %}
+                <tr>
+                    <td colspan="11" class="group-header">{{ group.name }}</td>
+                </tr>
+                {% for transaction in group.transactions %}
+                <tr>
+                    <td>{{ transaction.transaction_date|date:"Y-m-d" }}</td>
+                    <td>{{ transaction.product.name }}</td>
+                    <td class="text-right">{{ transaction.quantity }}</td>
+                    <td>{{ transaction.product.unit_of_measure }}</td>
+                    <td class="text-right">{{ transaction.buying_price }}</td>
+                    <td class="text-right">{{ transaction.selling_price }}</td>
+                    <td class="text-right">{{ transaction.wastage_amount }}</td>
+                    <td class="text-right">{{ transaction.total_price }}</td>
+                    <td class="text-right">{{ transaction.profit_loss }}</td>
+                    <td>{% if transaction.client %}{{ transaction.client.name }}{% else %}-{% endif %}</td>
+                    <td>{{ transaction.reference_number|default:"-" }}</td>
+                </tr>
+                {% endfor %}
+                <tr class="subtotal-row">
+                    <td colspan="7" class="text-right">Subtotal:</td>
+                    <td class="text-right">{{ group.subtotal|floatformat:2 }}</td>
+                    <td colspan="3"></td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                {% for transaction in sales %}
+                <tr>
+                    <td>{{ transaction.transaction_date|date:"Y-m-d" }}</td>
+                    <td>{{ transaction.product.name }}</td>
+                    <td class="text-right">{{ transaction.quantity }}</td>
+                    <td>{{ transaction.product.unit_of_measure }}</td>
+                    <td class="text-right">{{ transaction.buying_price }}</td>
+                    <td class="text-right">{{ transaction.selling_price }}</td>
+                    <td class="text-right">{{ transaction.wastage_amount }}</td>
+                    <td class="text-right">{{ transaction.total_price }}</td>
+                    <td class="text-right">{{ transaction.profit_loss }}</td>
+                    <td>{% if transaction.client %}{{ transaction.client.name }}{% else %}-{% endif %}</td>
+                    <td>{{ transaction.reference_number|default:"-" }}</td>
+                </tr>
+                {% endfor %}
+            {% endif %}
+            <tr class="total-row">
+                <td colspan="7" class="text-right">Total Sales:</td>
+                <td class="text-right">{{ total_sales|floatformat:2 }}</td>
+                <td colspan="3"></td>
+            </tr>
+        </tbody>
+    </table>
+
+    {% elif report_type == 'purchase' %}
+    <!-- Purchase Report -->
+    <table>
+        <thead>
+            <tr>
+                <th class="col-date">Date</th>
+                <th class="col-product">Product</th>
+                <th class="col-qty text-right">Qty</th>
+                <th class="col-uom">UOM</th>
+                <th class="col-price text-right">Buying Price</th>
+                <th class="col-price text-right">Wastage</th>
+                <th class="col-total text-right">Total Price</th>
+                <th class="col-client">Supplier</th>
+                <th class="col-ref">Reference</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if grouped_data %}
+                {% for group in grouped_data %}
+                <tr>
+                    <td colspan="9" class="group-header">{{ group.name }}</td>
+                </tr>
+                {% for transaction in group.transactions %}
+                <tr>
+                    <td>{{ transaction.transaction_date|date:"Y-m-d" }}</td>
+                    <td>{{ transaction.product.name }}</td>
+                    <td class="text-right">{{ transaction.quantity }}</td>
+                    <td>{{ transaction.product.unit_of_measure }}</td>
+                    <td class="text-right">{{ transaction.buying_price }}</td>
+                    <td class="text-right">{{ transaction.wastage_amount }}</td>
+                    <td class="text-right">{{ transaction.total_price }}</td>
+                    <td>{% if transaction.product.supplier %}{{ transaction.product.supplier.name }}{% else %}-{% endif %}</td>
+                    <td>{{ transaction.reference_number|default:"-" }}</td>
+                </tr>
+                {% endfor %}
+                <tr class="subtotal-row">
+                    <td colspan="6" class="text-right">Subtotal:</td>
+                    <td class="text-right">{{ group.subtotal|floatformat:2 }}</td>
+                    <td colspan="2"></td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                {% for transaction in purchases %}
+                <tr>
+                    <td>{{ transaction.transaction_date|date:"Y-m-d" }}</td>
+                    <td>{{ transaction.product.name }}</td>
+                    <td class="text-right">{{ transaction.quantity }}</td>
+                    <td>{{ transaction.product.unit_of_measure }}</td>
+                    <td class="text-right">{{ transaction.buying_price }}</td>
+                    <td class="text-right">{{ transaction.wastage_amount }}</td>
+                    <td class="text-right">{{ transaction.total_price }}</td>
+                    <td>{% if transaction.product.supplier %}{{ transaction.product.supplier.name }}{% else %}-{% endif %}</td>
+                    <td>{{ transaction.reference_number|default:"-" }}</td>
+                </tr>
+                {% endfor %}
+            {% endif %}
+            <tr class="total-row">
+                <td colspan="6" class="text-right">Total Purchases:</td>
+                <td class="text-right">{{ total_purchases|floatformat:2 }}</td>
+                <td colspan="2"></td>
+            </tr>
+        </tbody>
+    </table>
+
+    {% elif report_type == 'wastage' %}
+    <!-- Wastage Report -->
+    <table>
+        <thead>
+            <tr>
+                <th class="col-date">Date</th>
+                <th class="col-product">Product</th>
+                <th>Type</th>
+                <th class="col-qty text-right">Qty</th>
+                <th class="col-price text-right">Buying</th>
+                <th class="col-price text-right">Unit Price</th>
+                <th class="col-price text-right">Wastage</th>
+                <th class="col-price text-right">Profit/Loss</th>
+                <th class="col-total text-right">Total</th>
+                <th class="col-notes">Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if grouped_data %}
+                {% for group in grouped_data %}
+                <tr>
+                    <td colspan="10" class="group-header">{{ group.name }}</td>
+                </tr>
+                {% for transaction in group.transactions %}
+                <tr>
+                    <td>{{ transaction.transaction_date|date:"Y-m-d" }}</td>
+                    <td>{{ transaction.product.name }}</td>
+                    <td>
+                        {% if transaction.transaction_type == 'wastage' %}
+                        Wastage
+                        {% elif transaction.transaction_type == 'in' %}
+                        Purchase
+                        {% elif transaction.transaction_type == 'out' %}
+                        Sale
+                        {% else %}
+                        {{ transaction.transaction_type }}
+                        {% endif %}
+                    </td>
+                    <td class="text-right">{{ transaction.quantity }}</td>
+                    <td class="text-right">{{ transaction.buying_price }}</td>
+                    <td class="text-right">{{ transaction.unit_price }}</td>
+                    <td class="text-right">{{ transaction.wastage_amount }}</td>
+                    <td class="text-right">{{ transaction.profit_loss }}</td>
+                    <td class="text-right">{{ transaction.total_price }}</td>
+                    <td>{{ transaction.notes|truncatechars:30|default:"-" }}</td>
+                </tr>
+                {% endfor %}
+                <tr class="subtotal-row">
+                    <td colspan="8" class="text-right">Subtotal:</td>
+                    <td class="text-right">{{ group.subtotal|floatformat:2 }}</td>
+                    <td></td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                {% for transaction in wastage %}
+                <tr>
+                    <td>{{ transaction.transaction_date|date:"Y-m-d" }}</td>
+                    <td>{{ transaction.product.name }}</td>
+                    <td>
+                        {% if transaction.transaction_type == 'wastage' %}
+                        Wastage
+                        {% elif transaction.transaction_type == 'in' %}
+                        Purchase
+                        {% elif transaction.transaction_type == 'out' %}
+                        Sale
+                        {% else %}
+                        {{ transaction.transaction_type }}
+                        {% endif %}
+                    </td>
+                    <td class="text-right">{{ transaction.quantity }}</td>
+                    <td class="text-right">{{ transaction.buying_price }}</td>
+                    <td class="text-right">{{ transaction.unit_price }}</td>
+                    <td class="text-right">{{ transaction.wastage_amount }}</td>
+                    <td class="text-right">{{ transaction.profit_loss }}</td>
+                    <td class="text-right">{{ transaction.total_price }}</td>
+                    <td>{{ transaction.notes|truncatechars:30|default:"-" }}</td>
+                </tr>
+                {% endfor %}
+            {% endif %}
+            <tr class="total-row">
+                <td colspan="8" class="text-right">Total Wastage Value:</td>
+                <td class="text-right">{{ total_wastage|floatformat:2 }}</td>
+                <td></td>
+            </tr>
+        </tbody>
+    </table>
+    {% endif %}
+
+    <div class="terms">
+        <div class="terms-title">Notes & Terms</div>
+        {% if terms_conditions %}
+            {{ terms_conditions|linebreaks }}
+        {% else %}
+        <ol>
+            <li>This report is generated from the QBITX Inventory Management System.</li>
+            <li>All values are displayed in the default currency.</li>
+            <li>For any questions regarding this report, please contact the system administrator.</li>
+        </ol>
+        {% endif %}
+    </div>
+
+    <div class="footer">
+        <p>QBITX Inventory Management System &copy; {% now "Y" %}</p>
+    </div>
+</body>
+</html> 

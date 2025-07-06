@@ -1,0 +1,272 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Invoice - QBITX IMS Transform Suppliers{% endblock %}
+
+{% block extra_css %}
+<style>
+    .formset-row {
+        border-bottom: 1px solid #dee2e6;
+        padding-bottom: 15px;
+        margin-bottom: 15px;
+    }
+    .delete-row {
+        display: flex;
+        align-items: center;
+        height: 100%;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Create New Invoice</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{% url 'invoices' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Invoices
+        </a>
+    </div>
+</div>
+
+{% if messages %}
+<div class="alert alert-info">
+    {% for message in messages %}
+    {{ message }}
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if formset.non_form_errors %}
+<div class="alert alert-danger">
+    <strong>Formset Errors:</strong>
+    <ul>
+        {% for error in formset.non_form_errors %}
+        <li>{{ error }}</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<div class="card">
+    <div class="card-body">
+        <form method="post" id="invoiceForm">
+            {% csrf_token %}
+            
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                {% for error in form.non_field_errors %}
+                {{ error }}
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <h5 class="mb-3">Invoice Details</h5>
+            
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="{{ form.invoice_number.id_for_label }}" class="form-label">Invoice Number</label>
+                        {{ form.invoice_number }}
+                        {% if form.invoice_number.errors %}
+                        <div class="text-danger">{{ form.invoice_number.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="{{ form.issue_date.id_for_label }}" class="form-label">Issue Date</label>
+                        {{ form.issue_date }}
+                        {% if form.issue_date.errors %}
+                        <div class="text-danger">{{ form.issue_date.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="{{ form.due_date.id_for_label }}" class="form-label">Due Date</label>
+                        {{ form.due_date }}
+                        {% if form.due_date.errors %}
+                        <div class="text-danger">{{ form.due_date.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="{{ form.client.id_for_label }}" class="form-label">Client</label>
+                        {{ form.client }}
+                        {% if form.client.errors %}
+                        <div class="text-danger">{{ form.client.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="{{ form.status.id_for_label }}" class="form-label">Status</label>
+                        {{ form.status }}
+                        {% if form.status.errors %}
+                        <div class="text-danger">{{ form.status.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <hr class="my-4">
+            
+            <h5 class="mb-3">Invoice Items</h5>
+            
+            {{ formset.management_form }}
+            {{ form.subtotal }}
+            
+            <div id="invoice-items">
+                {% for form in formset.forms %}
+                <div class="formset-row">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="{{ form.product.id_for_label }}" class="form-label">Product</label>
+                                {{ form.product }}
+                                {% if form.product.errors %}
+                                <div class="text-danger">{{ form.product.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label for="{{ form.quantity.id_for_label }}" class="form-label">Quantity</label>
+                                {{ form.quantity }}
+                                {% if form.quantity.errors %}
+                                <div class="text-danger">{{ form.quantity.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label for="{{ form.unit_price.id_for_label }}" class="form-label">Unit Price</label>
+                                {{ form.unit_price }}
+                                {% if form.unit_price.errors %}
+                                <div class="text-danger">{{ form.unit_price.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="delete-row">
+                                {{ form.DELETE }}
+                                <label for="{{ form.DELETE.id_for_label }}" class="form-label ms-2">Remove</label>
+                            </div>
+                        </div>
+                    </div>
+                    {% for hidden_field in form.hidden_fields %}
+                    {{ hidden_field }}
+                    {% endfor %}
+                </div>
+                {% endfor %}
+            </div>
+            
+            <div class="mb-3">
+                <button type="button" class="btn btn-outline-primary" id="add-item">
+                    <i class="fas fa-plus"></i> Add Another Item
+                </button>
+            </div>
+            
+            <hr class="my-4">
+            
+            <h5 class="mb-3">Additional Information</h5>
+            
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="{{ form.tax_rate.id_for_label }}" class="form-label">Tax Rate (%)</label>
+                        {{ form.tax_rate }}
+                        {% if form.tax_rate.errors %}
+                        <div class="text-danger">{{ form.tax_rate.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="{{ form.discount.id_for_label }}" class="form-label">Discount</label>
+                        {{ form.discount }}
+                        {% if form.discount.errors %}
+                        <div class="text-danger">{{ form.discount.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <div class="mb-3">
+                        <label for="{{ form.notes.id_for_label }}" class="form-label">Notes</label>
+                        {{ form.notes }}
+                        {% if form.notes.errors %}
+                        <div class="text-danger">{{ form.notes.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Create Invoice
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const addItemBtn = document.getElementById('add-item');
+        const totalForms = document.getElementById('id_items-TOTAL_FORMS');
+        const formsetContainer = document.getElementById('invoice-items');
+        
+        addItemBtn.addEventListener('click', function() {
+            const formCount = parseInt(totalForms.value);
+            const newForm = formsetContainer.querySelector('.formset-row').cloneNode(true);
+            
+            // Update form index
+            newForm.innerHTML = newForm.innerHTML.replace(/-\d+-/g, `-${formCount}-`);
+            
+            // Clear input values
+            newForm.querySelectorAll('input[type="text"], input[type="number"]').forEach(input => {
+                input.value = '';
+            });
+            
+            // Reset select elements
+            newForm.querySelectorAll('select').forEach(select => {
+                select.selectedIndex = 0;
+            });
+            
+            // Uncheck checkboxes
+            newForm.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            
+            formsetContainer.appendChild(newForm);
+            totalForms.value = formCount + 1;
+        });
+        
+        // Calculate total price when quantity or unit price changes
+        formsetContainer.addEventListener('change', function(e) {
+            if (e.target.name.includes('quantity') || e.target.name.includes('unit_price')) {
+                const row = e.target.closest('.formset-row');
+                const quantityInput = row.querySelector('input[name$="quantity"]');
+                const priceInput = row.querySelector('input[name$="unit_price"]');
+                
+                if (quantityInput && priceInput) {
+                    const quantity = parseFloat(quantityInput.value) || 0;
+                    const price = parseFloat(priceInput.value) || 0;
+                    const total = quantity * price;
+                    
+                    // If we had a total display field, we would update it here
+                    console.log(`Row total: ${total}`);
+                }
+            }
+        });
+    });
+</script>
+{% endblock %} 

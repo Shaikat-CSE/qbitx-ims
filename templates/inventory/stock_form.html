@@ -1,0 +1,393 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Stock Transaction - QBITX IMS Transform Suppliers{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Add Stock Transaction</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{% url 'stock' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Stock
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post" id="stockTransactionForm">
+            {% csrf_token %}
+            
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                {% for error in form.non_field_errors %}
+                {{ error }}
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="{{ form.product.id_for_label }}" class="form-label">Product</label>
+                        {{ form.product }}
+                        {% if form.product.errors %}
+                        <div class="text-danger">{{ form.product.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="{{ form.transaction_type.id_for_label }}" class="form-label">Transaction Type</label>
+                        {{ form.transaction_type }}
+                        {% if form.transaction_type.errors %}
+                        <div class="text-danger">{{ form.transaction_type.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="{{ form.quantity.id_for_label }}" class="form-label">Quantity</label>
+                        {{ form.quantity }}
+                        {% if form.quantity.errors %}
+                        <div class="text-danger">{{ form.quantity.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="{{ form.buying_price.id_for_label }}" class="form-label">Buying Price (BDT)</label>
+                        {{ form.buying_price }}
+                        <small class="form-text text-muted">Auto-filled from product</small>
+                        {% if form.buying_price.errors %}
+                        <div class="text-danger">{{ form.buying_price.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="{{ form.selling_price.id_for_label }}" class="form-label">Selling Price (BDT)</label>
+                        {{ form.selling_price }}
+                        <small class="form-text text-muted">Auto-filled from product</small>
+                        {% if form.selling_price.errors %}
+                        <div class="text-danger">{{ form.selling_price.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="{{ form.wastage_amount.id_for_label }}" class="form-label">Wastage Amount (BDT)</label>
+                        {{ form.wastage_amount }}
+                        <small class="form-text text-muted">Additional wastage cost in BDT</small>
+                        {% if form.wastage_amount.errors %}
+                        <div class="text-danger">{{ form.wastage_amount.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="{{ form.transaction_date.id_for_label }}" class="form-label">Transaction Date</label>
+                        {{ form.transaction_date }}
+                        {% if form.transaction_date.errors %}
+                        <div class="text-danger">{{ form.transaction_date.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="{{ form.reference_number.id_for_label }}" class="form-label">Reference Number</label>
+                        {{ form.reference_number }}
+                        {% if form.reference_number.errors %}
+                        <div class="text-danger">{{ form.reference_number.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="{{ form.supplier.id_for_label }}" class="form-label">Supplier</label>
+                        {{ form.supplier }}
+                        <small class="form-text text-muted">Required for Stock In transactions</small>
+                        {% if form.supplier.errors %}
+                        <div class="text-danger">{{ form.supplier.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="{{ form.client.id_for_label }}" class="form-label">Client</label>
+                        {{ form.client }}
+                        <small class="form-text text-muted">Required for Stock Out transactions</small>
+                        {% if form.client.errors %}
+                        <div class="text-danger">{{ form.client.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <div class="mb-3">
+                        <label for="{{ form.notes.id_for_label }}" class="form-label">Notes</label>
+                        {{ form.notes }}
+                        {% if form.notes.errors %}
+                        <div class="text-danger">{{ form.notes.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Save Transaction
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Profit/Loss Calculator Card -->
+<div class="card mt-4" id="profitLossCard">
+    <div class="card-header bg-light">
+        <h5 class="mb-0">Transaction Summary</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <h6 class="border-bottom pb-2 mb-3">Product Information</h6>
+                <table class="table table-sm">
+                    <tr>
+                        <th>Product Name:</th>
+                        <td id="summaryProduct">-</td>
+                    </tr>
+                    <tr>
+                        <th>SKU:</th>
+                        <td id="summarySKU">-</td>
+                    </tr>
+                    <tr>
+                        <th>Category:</th>
+                        <td id="summaryCategory">-</td>
+                    </tr>
+                    <tr>
+                        <th>Supplier:</th>
+                        <td id="summarySupplier">-</td>
+                    </tr>
+                    <tr>
+                        <th>Current Stock:</th>
+                        <td id="summaryCurrentStock">-</td>
+                    </tr>
+                    <tr>
+                        <th>UOM:</th>
+                        <td id="summaryUOM">-</td>
+                    </tr>
+                    <tr>
+                        <th>Description:</th>
+                        <td id="summaryDescription">-</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <h6 class="border-bottom pb-2 mb-3">Transaction Details</h6>
+                <table class="table table-sm">
+                    <tr>
+                        <th>Transaction Type:</th>
+                        <td id="summaryType">-</td>
+                    </tr>
+                    <tr>
+                        <th>Quantity:</th>
+                        <td id="summaryQuantity">-</td>
+                    </tr>
+                    <tr>
+                        <th>Total Cost:</th>
+                        <td id="summaryCost">-</td>
+                    </tr>
+                    <tr>
+                        <th>Total Revenue:</th>
+                        <td id="summaryRevenue">-</td>
+                    </tr>
+                    <tr>
+                        <th>Wastage:</th>
+                        <td id="summaryWastage">-</td>
+                    </tr>
+                    <tr>
+                        <th>Profit/Loss:</th>
+                        <td id="summaryProfitLoss">-</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Store product data for quick access
+    let productData = {};
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        const productSelect = document.getElementById('{{ form.product.id_for_label }}');
+        const transactionTypeSelect = document.getElementById('{{ form.transaction_type.id_for_label }}');
+        const quantityInput = document.getElementById('{{ form.quantity.id_for_label }}');
+        const buyingPriceInput = document.getElementById('{{ form.buying_price.id_for_label }}');
+        const sellingPriceInput = document.getElementById('{{ form.selling_price.id_for_label }}');
+        const wastageAmountInput = document.getElementById('{{ form.wastage_amount.id_for_label }}');
+        const supplierField = document.getElementById('{{ form.supplier.id_for_label }}').parentNode.parentNode;
+        const clientField = document.getElementById('{{ form.client.id_for_label }}').parentNode.parentNode;
+        
+        // Fetch product data via AJAX
+        fetch('{% url "products" %}?format=json')
+            .then(response => response.json())
+            .then(data => {
+                console.log("Product data loaded:", data);
+                data.forEach(product => {
+                    productData[product.id] = {
+                        name: product.name,
+                        sku: product.sku,
+                        buying_price: product.buying_price,
+                        selling_price: product.selling_price,
+                        uom: product.unit_of_measure,
+                        quantity: product.quantity,
+                        category: product.category_name || 'N/A',
+                        supplier: product.supplier_name || 'N/A',
+                        description: product.description || 'N/A'
+                    };
+                });
+                
+                // If a product is already selected (e.g., on form edit), update prices
+                if (productSelect.value) {
+                    console.log("Initial product selected:", productSelect.value);
+                    updateProductPrices();
+                }
+            })
+            .catch(error => console.error('Error fetching product data:', error));
+        
+        function updateFields() {
+            const transactionType = transactionTypeSelect.value;
+            
+            // Show/hide supplier and client fields based on transaction type
+            if (transactionType === 'in' || transactionType === 'return') {
+                supplierField.style.display = 'block';
+                clientField.style.display = 'none';
+            } else if (transactionType === 'out') {
+                supplierField.style.display = 'none';
+                clientField.style.display = 'block';
+            } else if (transactionType === 'wastage') {
+                supplierField.style.display = 'none';
+                clientField.style.display = 'none';
+            } else {
+                supplierField.style.display = 'block';
+                clientField.style.display = 'block';
+            }
+            
+            updateSummary();
+        }
+        
+        function updateProductPrices() {
+            const productId = productSelect.value;
+            console.log("Updating prices for product ID:", productId);
+            
+            if (productId && productData[productId]) {
+                console.log("Setting prices from product data:", productData[productId]);
+                buyingPriceInput.value = productData[productId].buying_price;
+                sellingPriceInput.value = productData[productId].selling_price;
+                
+                updateSummary();
+            } else {
+                console.log("Product data not found for ID:", productId);
+            }
+        }
+        
+        function updateSummary() {
+            const productId = productSelect.value;
+            const transactionType = transactionTypeSelect.value;
+            const quantity = parseFloat(quantityInput.value) || 0;
+            const buyingPrice = parseFloat(buyingPriceInput.value) || 0;
+            const sellingPrice = parseFloat(sellingPriceInput.value) || 0;
+            const wastageAmount = parseFloat(wastageAmountInput.value) || 0;
+            
+            // Update summary fields
+            if (productId && productData[productId]) {
+                const product = productData[productId];
+                document.getElementById('summaryProduct').textContent = product.name;
+                document.getElementById('summaryType').textContent = transactionType ? transactionTypeSelect.options[transactionTypeSelect.selectedIndex].text : '-';
+                document.getElementById('summaryQuantity').textContent = quantity || '-';
+                document.getElementById('summaryUOM').textContent = product.uom;
+                
+                // Add additional product info
+                document.getElementById('summarySKU').textContent = product.sku;
+                document.getElementById('summaryCategory').textContent = product.category;
+                document.getElementById('summarySupplier').textContent = product.supplier;
+                document.getElementById('summaryCurrentStock').textContent = product.quantity;
+                document.getElementById('summaryDescription').textContent = product.description;
+            } else {
+                document.getElementById('summaryProduct').textContent = '-';
+                document.getElementById('summaryType').textContent = transactionType ? transactionTypeSelect.options[transactionTypeSelect.selectedIndex].text : '-';
+                document.getElementById('summaryQuantity').textContent = quantity || '-';
+                document.getElementById('summaryUOM').textContent = '-';
+                
+                // Clear additional product info
+                document.getElementById('summarySKU').textContent = '-';
+                document.getElementById('summaryCategory').textContent = '-';
+                document.getElementById('summarySupplier').textContent = '-';
+                document.getElementById('summaryCurrentStock').textContent = '-';
+                document.getElementById('summaryDescription').textContent = '-';
+            }
+            
+            let cost = 0;
+            let revenue = 0;
+            let profitLoss = 0;
+            let unitPrice = 0;
+            
+            if (transactionType === 'out') {
+                unitPrice = sellingPrice;
+                cost = quantity * buyingPrice;
+                revenue = quantity * unitPrice;
+                profitLoss = revenue - cost - wastageAmount;
+                
+                document.getElementById('summaryCost').textContent = cost.toFixed(2) + ' BDT';
+                document.getElementById('summaryRevenue').textContent = revenue.toFixed(2) + ' BDT';
+                document.getElementById('summaryWastage').textContent = wastageAmount.toFixed(2) + ' BDT';
+                document.getElementById('summaryProfitLoss').textContent = profitLoss.toFixed(2) + ' BDT';
+                document.getElementById('summaryProfitLoss').className = profitLoss >= 0 ? 'text-success' : 'text-danger';
+            } else if (transactionType === 'wastage') {
+                unitPrice = buyingPrice;
+                cost = quantity * buyingPrice;
+                profitLoss = -(cost + wastageAmount);
+                
+                document.getElementById('summaryCost').textContent = cost.toFixed(2) + ' BDT';
+                document.getElementById('summaryRevenue').textContent = '0.00 BDT';
+                document.getElementById('summaryWastage').textContent = wastageAmount.toFixed(2) + ' BDT';
+                document.getElementById('summaryProfitLoss').textContent = profitLoss.toFixed(2) + ' BDT';
+                document.getElementById('summaryProfitLoss').className = 'text-danger';
+            } else {
+                document.getElementById('summaryCost').textContent = '-';
+                document.getElementById('summaryRevenue').textContent = '-';
+                document.getElementById('summaryWastage').textContent = wastageAmount.toFixed(2) + ' BDT';
+                document.getElementById('summaryProfitLoss').textContent = '-';
+            }
+        }
+        
+        // Add event listeners
+        productSelect.addEventListener('change', function() {
+            console.log("Product changed to:", this.value);
+            updateProductPrices();
+        });
+        transactionTypeSelect.addEventListener('change', updateFields);
+        quantityInput.addEventListener('input', updateSummary);
+        buyingPriceInput.addEventListener('input', updateSummary);
+        sellingPriceInput.addEventListener('input', updateSummary);
+        wastageAmountInput.addEventListener('input', updateSummary);
+        
+        // Initialize fields
+        updateFields();
+    });
+</script>
+{% endblock %} 
