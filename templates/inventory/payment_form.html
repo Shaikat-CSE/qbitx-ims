@@ -1,0 +1,335 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - QBITX IMS Transform Suppliers{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">{{ title }}</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{% url 'payments' %}" class="btn btn-sm btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Payments
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4" id="transaction-search-card">
+    <div class="card-header bg-light">
+        <h5 class="mb-0">Select Transaction</h5>
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label">Search by Transaction ID</label>
+                <div class="input-group">
+                    <input type="text" id="transaction-id-search" class="form-control" placeholder="Enter transaction ID (e.g., IN-230415-0001)">
+                    <button class="btn btn-outline-primary" type="button" id="search-transaction-btn">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                </div>
+                <div class="form-text">Enter the transaction ID to quickly find a specific transaction</div>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Or Select from Unpaid Transactions</label>
+                <select id="transaction-select" class="form-select">
+                    <option value="">-- Select a transaction --</option>
+                    {% for transaction in form.transaction.field.queryset %}
+                    <option value="{{ transaction.id }}" data-transaction-id="{{ transaction.transaction_id }}">
+                        {{ transaction.transaction_id }} - {{ transaction.product.name }} ({{ transaction.get_transaction_type_display }})
+                    </option>
+                    {% endfor %}
+                </select>
+                <div class="form-text">Select from the list of transactions with pending payments</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4" id="transaction-details-card" style="display: none;">
+    <div class="card-header bg-light">
+        <h5 class="mb-0">Transaction Details</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Transaction ID:</strong> <span id="detail-transaction-id"></span></p>
+                <p><strong>Product:</strong> <span id="detail-product"></span></p>
+                <p><strong>Transaction Type:</strong> <span id="detail-transaction-type"></span></p>
+                <p><strong>Transaction Date:</strong> <span id="detail-date"></span></p>
+                <p><strong>Reference:</strong> <span id="detail-reference"></span></p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Total Amount:</strong> <span id="detail-total"></span></p>
+                <p><strong>Amount Paid:</strong> <span id="detail-paid"></span></p>
+                <p><strong>Amount Due:</strong> <span id="detail-due"></span></p>
+                <p><strong>Payment Status:</strong> <span id="detail-status"></span></p>
+                <p><strong>Client/Supplier:</strong> <span id="detail-party"></span></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-light">
+        <h5 class="mb-0">Payment Information</h5>
+    </div>
+    <div class="card-body">
+        <form method="post" class="needs-validation" novalidate id="payment-form">
+            {% csrf_token %}
+            
+            <input type="hidden" name="transaction" id="selected-transaction-id">
+            
+            <div class="mb-3">
+                <label for="{{ form.amount.id_for_label }}" class="form-label">Amount</label>
+                {{ form.amount }}
+                {% if form.amount.errors %}
+                <div class="invalid-feedback d-block">
+                    {{ form.amount.errors }}
+                </div>
+                {% endif %}
+                <div class="form-text">Enter the payment amount (maximum: <span id="max-payment-amount">0</span>).</div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="{{ form.payment_date.id_for_label }}" class="form-label">Payment Date</label>
+                {{ form.payment_date }}
+                {% if form.payment_date.errors %}
+                <div class="invalid-feedback d-block">
+                    {{ form.payment_date.errors }}
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                <label for="{{ form.payment_method.id_for_label }}" class="form-label">Payment Method</label>
+                {{ form.payment_method }}
+                {% if form.payment_method.errors %}
+                <div class="invalid-feedback d-block">
+                    {{ form.payment_method.errors }}
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                <label for="{{ form.reference.id_for_label }}" class="form-label">Reference</label>
+                {{ form.reference }}
+                {% if form.reference.errors %}
+                <div class="invalid-feedback d-block">
+                    {{ form.reference.errors }}
+                </div>
+                {% endif %}
+                <div class="form-text">Enter a reference number (e.g., check number, transaction ID).</div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="{{ form.notes.id_for_label }}" class="form-label">Notes</label>
+                {{ form.notes }}
+                {% if form.notes.errors %}
+                <div class="invalid-feedback d-block">
+                    {{ form.notes.errors }}
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                <a href="{% url 'payments' %}" class="btn btn-outline-secondary me-md-2">Cancel</a>
+                <button type="submit" class="btn btn-primary" id="submit-payment-btn" disabled>Record Payment</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Form validation
+        var forms = document.querySelectorAll('.needs-validation');
+        Array.from(forms).forEach(function(form) {
+            form.addEventListener('submit', function(event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+        
+        // Transaction selection handling
+        const transactionSelect = document.getElementById('transaction-select');
+        const transactionIdSearch = document.getElementById('transaction-id-search');
+        const searchTransactionBtn = document.getElementById('search-transaction-btn');
+        const transactionDetailsCard = document.getElementById('transaction-details-card');
+        const selectedTransactionId = document.getElementById('selected-transaction-id');
+        const submitPaymentBtn = document.getElementById('submit-payment-btn');
+        const amountInput = document.getElementById('{{ form.amount.id_for_label }}');
+        const maxPaymentAmount = document.getElementById('max-payment-amount');
+        
+        // Function to fetch transaction details
+        function fetchTransactionDetails(transactionId) {
+            // Show loading indicator
+            transactionDetailsCard.innerHTML = '<div class="text-center p-3"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div><p class="mt-2">Loading transaction details...</p></div>';
+            transactionDetailsCard.style.display = 'block';
+            
+            // Make AJAX request to get transaction details
+            fetch(`/imstransform/api/transaction/${transactionId}/`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Transaction not found');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Populate transaction details
+                    document.getElementById('detail-transaction-id').textContent = data.transaction_id;
+                    document.getElementById('detail-product').textContent = data.product_name;
+                    document.getElementById('detail-transaction-type').textContent = data.transaction_type_display;
+                    document.getElementById('detail-date').textContent = new Date(data.transaction_date).toLocaleString();
+                    document.getElementById('detail-reference').textContent = data.reference_number || 'N/A';
+                    document.getElementById('detail-total').textContent = data.total_price;
+                    document.getElementById('detail-paid').textContent = data.amount_paid;
+                    document.getElementById('detail-due').textContent = data.amount_due;
+                    document.getElementById('detail-status').textContent = data.payment_status_display;
+                    
+                    // Set client or supplier info
+                    if (data.client_name) {
+                        document.getElementById('detail-party').textContent = `Client: ${data.client_name}`;
+                    } else if (data.supplier_name) {
+                        document.getElementById('detail-party').textContent = `Supplier: ${data.supplier_name}`;
+                    } else {
+                        document.getElementById('detail-party').textContent = 'N/A';
+                    }
+                    
+                    // Update form with transaction ID
+                    selectedTransactionId.value = data.id;
+                    
+                    // Set max payment amount
+                    maxPaymentAmount.textContent = data.amount_due;
+                    amountInput.value = data.amount_due;
+                    amountInput.max = data.amount_due;
+                    
+                    // Enable submit button
+                    submitPaymentBtn.disabled = false;
+                    
+                    // Show transaction details card
+                    transactionDetailsCard.style.display = 'block';
+                })
+                .catch(error => {
+                    // Show error message
+                    transactionDetailsCard.innerHTML = 
+                        '<div class="card-header bg-light">' +
+                        '<h5 class="mb-0">Transaction Details</h5>' +
+                        '</div>' +
+                        '<div class="card-body">' +
+                        '<div class="alert alert-danger">' +
+                        '<i class="fas fa-exclamation-triangle"></i> ' + error.message +
+                        '</div>' +
+                        '</div>';
+                    
+                    // Disable submit button
+                    submitPaymentBtn.disabled = true;
+                });
+        }
+        
+        // Handle transaction selection from dropdown
+        transactionSelect.addEventListener('change', function() {
+            if (this.value) {
+                const selectedOption = this.options[this.selectedIndex];
+                const transactionId = selectedOption.getAttribute('data-transaction-id');
+                transactionIdSearch.value = transactionId;
+                fetchTransactionDetails(this.value);
+            } else {
+                transactionDetailsCard.style.display = 'none';
+                selectedTransactionId.value = '';
+                submitPaymentBtn.disabled = true;
+            }
+        });
+        
+        // Handle transaction search by ID
+        searchTransactionBtn.addEventListener('click', function() {
+            const searchValue = transactionIdSearch.value.trim();
+            if (searchValue) {
+                // Find the transaction in the dropdown
+                let found = false;
+                for (let i = 0; i < transactionSelect.options.length; i++) {
+                    const option = transactionSelect.options[i];
+                    const transactionId = option.getAttribute('data-transaction-id');
+                    if (transactionId && transactionId.toLowerCase() === searchValue.toLowerCase()) {
+                        transactionSelect.value = option.value;
+                        fetchTransactionDetails(option.value);
+                        found = true;
+                        break;
+                    }
+                }
+                
+                if (!found) {
+                    transactionDetailsCard.innerHTML = 
+                        '<div class="card-header bg-light">' +
+                        '<h5 class="mb-0">Transaction Details</h5>' +
+                        '</div>' +
+                        '<div class="card-body">' +
+                        '<div class="alert alert-warning">' +
+                        '<i class="fas fa-exclamation-triangle"></i> No transaction found with ID: ' + searchValue +
+                        '</div>' +
+                        '</div>';
+                    transactionDetailsCard.style.display = 'block';
+                    selectedTransactionId.value = '';
+                    submitPaymentBtn.disabled = true;
+                }
+            }
+        });
+        
+        // Also trigger search on Enter key
+        transactionIdSearch.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                searchTransactionBtn.click();
+            }
+        });
+        
+        // Handle amount input validation
+        amountInput.addEventListener('input', function() {
+            const maxAmount = parseFloat(maxPaymentAmount.textContent);
+            const currentAmount = parseFloat(this.value);
+            
+            if (currentAmount > maxAmount) {
+                this.value = maxAmount;
+            } else if (currentAmount <= 0) {
+                this.setCustomValidity('Amount must be greater than zero');
+            } else {
+                this.setCustomValidity('');
+            }
+        });
+        
+        // If transaction is pre-selected (editing mode), show its details
+        {% if transaction %}
+        selectedTransactionId.value = '{{ transaction.id }}';
+        document.getElementById('detail-transaction-id').textContent = '{{ transaction.transaction_id }}';
+        document.getElementById('detail-product').textContent = '{{ transaction.product.name }}';
+        document.getElementById('detail-transaction-type').textContent = '{{ transaction.get_transaction_type_display }}';
+        document.getElementById('detail-date').textContent = '{{ transaction.transaction_date|date:"Y-m-d H:i" }}';
+        document.getElementById('detail-reference').textContent = '{{ transaction.reference_number|default:"N/A" }}';
+        document.getElementById('detail-total').textContent = '{{ transaction.total_price }}';
+        document.getElementById('detail-paid').textContent = '{{ transaction.amount_paid }}';
+        document.getElementById('detail-due').textContent = '{{ transaction.amount_due }}';
+        document.getElementById('detail-status').textContent = '{{ transaction.get_payment_status_display }}';
+        
+        {% if transaction.client %}
+        document.getElementById('detail-party').textContent = 'Client: {{ transaction.client.name }}';
+        {% elif transaction.supplier %}
+        document.getElementById('detail-party').textContent = 'Supplier: {{ transaction.supplier.name }}';
+        {% else %}
+        document.getElementById('detail-party').textContent = 'N/A';
+        {% endif %}
+        
+        maxPaymentAmount.textContent = '{{ transaction.amount_due }}';
+        transactionDetailsCard.style.display = 'block';
+        submitPaymentBtn.disabled = false;
+        
+        // Hide the transaction search card
+        document.getElementById('transaction-search-card').style.display = 'none';
+        {% endif %}
+    });
+</script>
+{% endblock %} 

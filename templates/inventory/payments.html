@@ -1,0 +1,289 @@
+{% extends 'base.html' %}
+{% load inventory_extras %}
+
+{% block title %}Payments - QBITX IMS Transform Suppliers{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Payment Management</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{% url 'payment_create' %}" class="btn btn-sm btn-primary">
+                <i class="fas fa-plus"></i> Record New Payment
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Advanced Filtering Options -->
+<div class="card mb-4">
+    <div class="card-header bg-light">
+        <button class="btn btn-link" type="button" data-bs-toggle="collapse" data-bs-target="#filterCollapse" aria-expanded="false" aria-controls="filterCollapse">
+            <i class="fas fa-filter"></i> Filter Transactions
+        </button>
+    </div>
+    <div class="collapse" id="filterCollapse">
+        <div class="card-body">
+            <form method="get" action="{% url 'payments' %}" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Payment Status</label>
+                    <select name="payment_status" class="form-select form-select-sm">
+                        <option value="">All Statuses</option>
+                        <option value="due" {% if payment_status == 'due' %}selected{% endif %}>Due</option>
+                        <option value="partial" {% if payment_status == 'partial' %}selected{% endif %}>Partially Paid</option>
+                        <option value="paid" {% if payment_status == 'paid' %}selected{% endif %}>Paid</option>
+                        <option value="credit" {% if payment_status == 'credit' %}selected{% endif %}>Credit</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Transaction Type</label>
+                    <select name="transaction_type" class="form-select form-select-sm">
+                        <option value="">All Types</option>
+                        <option value="in" {% if transaction_type == 'in' %}selected{% endif %}>Stock In</option>
+                        <option value="out" {% if transaction_type == 'out' %}selected{% endif %}>Stock Out</option>
+                        <option value="return" {% if transaction_type == 'return' %}selected{% endif %}>Return</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Client</label>
+                    <select name="client_id" class="form-select form-select-sm">
+                        <option value="">All Clients</option>
+                        {% for client in all_clients %}
+                        <option value="{{ client.id }}" {% if client_id == client.id %}selected{% endif %}>{{ client.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Supplier</label>
+                    <select name="supplier_id" class="form-select form-select-sm">
+                        <option value="">All Suppliers</option>
+                        {% for supplier in all_suppliers %}
+                        <option value="{{ supplier.id }}" {% if supplier_id == supplier.id %}selected{% endif %}>{{ supplier.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Date Range</label>
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text">From</span>
+                        <input type="date" name="start_date" class="form-control" value="{{ start_date|default:'' }}">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">&nbsp;</label>
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text">To</span>
+                        <input type="date" name="end_date" class="form-control" value="{{ end_date|default:'' }}">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Search</label>
+                    <div class="input-group input-group-sm">
+                        <input type="text" name="search" class="form-control" placeholder="Search by transaction ID, product, reference, client or supplier" value="{{ search_query|default:'' }}">
+                        <button class="btn btn-outline-secondary" type="submit">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary btn-sm">Apply Filters</button>
+                    <a href="{% url 'payments' %}" class="btn btn-outline-secondary btn-sm">Reset Filters</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Transactions Table -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">Transactions</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-sm">
+                <thead>
+                    <tr>
+                        <th>Transaction ID</th>
+                        <th>Date</th>
+                        <th>Product</th>
+                        <th>Type</th>
+                        <th>Total Amount</th>
+                        <th>Status</th>
+                        <th>Paid</th>
+                        <th>Due</th>
+                        <th>Client/Supplier</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for transaction in transactions %}
+                    <tr>
+                        <td><span class="badge bg-secondary">{{ transaction.transaction_id }}</span></td>
+                        <td>{{ transaction.transaction_date|date:"Y-m-d H:i" }}</td>
+                        <td>{{ transaction.product.name }}</td>
+                        <td>
+                            {% if transaction.transaction_type == 'in' %}
+                            <span class="badge bg-primary">Stock In</span>
+                            {% elif transaction.transaction_type == 'out' %}
+                            <span class="badge bg-info">Stock Out</span>
+                            {% elif transaction.transaction_type == 'return' %}
+                            <span class="badge bg-warning">Return</span>
+                            {% else %}
+                            <span class="badge bg-secondary">{{ transaction.get_transaction_type_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ transaction.total_price }}</td>
+                        <td>
+                            {% if transaction.payment_status == 'paid' %}
+                            <span class="badge bg-success">Paid</span>
+                            {% elif transaction.payment_status == 'due' %}
+                            <span class="badge bg-danger">Due</span>
+                            {% elif transaction.payment_status == 'partial' %}
+                            <span class="badge bg-warning">Partially Paid</span>
+                            {% elif transaction.payment_status == 'credit' %}
+                            <span class="badge bg-info">Credit</span>
+                            {% else %}
+                            <span class="badge bg-secondary">N/A</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ transaction.amount_paid }}</td>
+                        <td>{{ transaction.amount_due }}</td>
+                        <td>
+                            {% if transaction.transaction_type == 'out' or transaction.transaction_type == 'return' %}
+                                {% if transaction.client %}{{ transaction.client.name }}{% else %}-{% endif %}
+                            {% elif transaction.transaction_type == 'in' %}
+                                {% if transaction.supplier %}{{ transaction.supplier.name }}{% else %}-{% endif %}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if transaction.payment_status != 'paid' %}
+                            <a href="{% url 'payment_for_transaction' transaction.id %}" class="btn btn-sm btn-success">
+                                <i class="fas fa-money-bill-wave"></i> Pay
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="10" class="text-center">No transactions found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if transactions.has_other_pages %}
+        <nav aria-label="Page navigation" class="mt-3">
+            <ul class="pagination justify-content-center">
+                {% if transactions.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ transactions.previous_page_number }}{% if payment_status %}&payment_status={{ payment_status }}{% endif %}{% if client_id %}&client_id={{ client_id }}{% endif %}{% if supplier_id %}&supplier_id={{ supplier_id }}{% endif %}{% if transaction_type %}&transaction_type={{ transaction_type }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">&laquo;</a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">&laquo;</span>
+                </li>
+                {% endif %}
+                
+                {% for i in transactions.paginator.page_range %}
+                {% if transactions.number == i %}
+                <li class="page-item active">
+                    <span class="page-link">{{ i }}</span>
+                </li>
+                {% else %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ i }}{% if payment_status %}&payment_status={{ payment_status }}{% endif %}{% if client_id %}&client_id={{ client_id }}{% endif %}{% if supplier_id %}&supplier_id={{ supplier_id }}{% endif %}{% if transaction_type %}&transaction_type={{ transaction_type }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">{{ i }}</a>
+                </li>
+                {% endif %}
+                {% endfor %}
+                
+                {% if transactions.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ transactions.next_page_number }}{% if payment_status %}&payment_status={{ payment_status }}{% endif %}{% if client_id %}&client_id={{ client_id }}{% endif %}{% if supplier_id %}&supplier_id={{ supplier_id }}{% endif %}{% if transaction_type %}&transaction_type={{ transaction_type }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">&raquo;</a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">&raquo;</span>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Recent Payments Table -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">Recent Payments</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-sm">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Transaction ID</th>
+                        <th>Product</th>
+                        <th>Transaction Type</th>
+                        <th>Amount</th>
+                        <th>Method</th>
+                        <th>Reference</th>
+                        <th>Created By</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for payment in payment_records|slice:":10" %}
+                    <tr>
+                        <td>{{ payment.payment_date|date:"Y-m-d" }}</td>
+                        <td><span class="badge bg-secondary">{{ payment.transaction.transaction_id }}</span></td>
+                        <td>{{ payment.transaction.product.name }}</td>
+                        <td>
+                            {% if payment.transaction.transaction_type == 'in' %}
+                            <span class="badge bg-primary">Stock In</span>
+                            {% elif payment.transaction.transaction_type == 'out' %}
+                            <span class="badge bg-info">Stock Out</span>
+                            {% elif payment.transaction.transaction_type == 'return' %}
+                            <span class="badge bg-warning">Return</span>
+                            {% else %}
+                            <span class="badge bg-secondary">{{ payment.transaction.get_transaction_type_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ payment.amount }}</td>
+                        <td>{{ payment.get_payment_method_display }}</td>
+                        <td>{{ payment.reference|default:"-" }}</td>
+                        <td>{{ payment.created_by.username }}</td>
+                        <td>{{ payment.notes|truncatechars:30|default:"-" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center">No payment records found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Show filter collapse if any filters are applied
+        {% if payment_status or client_id or supplier_id or transaction_type or start_date or end_date or search_query %}
+        var filterCollapse = document.getElementById('filterCollapse');
+        if (filterCollapse) {
+            var bsCollapse = new bootstrap.Collapse(filterCollapse, {
+                toggle: true
+            });
+        }
+        {% endif %}
+    });
+</script>
+{% endblock %} 

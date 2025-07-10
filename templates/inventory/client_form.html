@@ -12,112 +12,169 @@
     </div>
 </div>
 
-<div class="card">
-    <div class="card-body">
-        <form method="post">
-            {% csrf_token %}
-            
-            {% if form.non_field_errors %}
-            <div class="alert alert-danger">
-                {% for error in form.non_field_errors %}
-                {{ error }}
-                {% endfor %}
+<div class="row">
+    <div class="col-md-{% if client %}8{% else %}12{% endif %}">
+        <div class="card">
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.non_field_errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.name.id_for_label }}" class="form-label">Client Name</label>
+                                {{ form.name }}
+                                {% if form.name.errors %}
+                                <div class="text-danger">{{ form.name.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.contact_person.id_for_label }}" class="form-label">Contact Person</label>
+                                {{ form.contact_person }}
+                                {% if form.contact_person.errors %}
+                                <div class="text-danger">{{ form.contact_person.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.email.id_for_label }}" class="form-label">Email</label>
+                                {{ form.email }}
+                                {% if form.email.errors %}
+                                <div class="text-danger">{{ form.email.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.phone.id_for_label }}" class="form-label">Phone</label>
+                                {{ form.phone }}
+                                {% if form.phone.errors %}
+                                <div class="text-danger">{{ form.phone.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label for="{{ form.address.id_for_label }}" class="form-label">Address</label>
+                                {{ form.address }}
+                                {% if form.address.errors %}
+                                <div class="text-danger">{{ form.address.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.city.id_for_label }}" class="form-label">City</label>
+                                {{ form.city }}
+                                {% if form.city.errors %}
+                                <div class="text-danger">{{ form.city.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.country.id_for_label }}" class="form-label">Country</label>
+                                {{ form.country }}
+                                {% if form.country.errors %}
+                                <div class="text-danger">{{ form.country.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label for="{{ form.notes.id_for_label }}" class="form-label">Notes</label>
+                                {{ form.notes }}
+                                {% if form.notes.errors %}
+                                <div class="text-danger">{{ form.notes.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> {% if client %}Update{% else %}Save{% endif %} Client
+                        </button>
+                    </div>
+                </form>
             </div>
-            {% endif %}
-            
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label for="{{ form.name.id_for_label }}" class="form-label">Client Name</label>
-                        {{ form.name }}
-                        {% if form.name.errors %}
-                        <div class="text-danger">{{ form.name.errors }}</div>
-                        {% endif %}
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label for="{{ form.contact_person.id_for_label }}" class="form-label">Contact Person</label>
-                        {{ form.contact_person }}
-                        {% if form.contact_person.errors %}
-                        <div class="text-danger">{{ form.contact_person.errors }}</div>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-            
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label for="{{ form.email.id_for_label }}" class="form-label">Email</label>
-                        {{ form.email }}
-                        {% if form.email.errors %}
-                        <div class="text-danger">{{ form.email.errors }}</div>
-                        {% endif %}
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label for="{{ form.phone.id_for_label }}" class="form-label">Phone</label>
-                        {{ form.phone }}
-                        {% if form.phone.errors %}
-                        <div class="text-danger">{{ form.phone.errors }}</div>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-            
-            <div class="row mb-3">
-                <div class="col-md-12">
-                    <div class="mb-3">
-                        <label for="{{ form.address.id_for_label }}" class="form-label">Address</label>
-                        {{ form.address }}
-                        {% if form.address.errors %}
-                        <div class="text-danger">{{ form.address.errors }}</div>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-            
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label for="{{ form.city.id_for_label }}" class="form-label">City</label>
-                        {{ form.city }}
-                        {% if form.city.errors %}
-                        <div class="text-danger">{{ form.city.errors }}</div>
-                        {% endif %}
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label for="{{ form.country.id_for_label }}" class="form-label">Country</label>
-                        {{ form.country }}
-                        {% if form.country.errors %}
-                        <div class="text-danger">{{ form.country.errors }}</div>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-            
-            <div class="row mb-3">
-                <div class="col-md-12">
-                    <div class="mb-3">
-                        <label for="{{ form.notes.id_for_label }}" class="form-label">Notes</label>
-                        {{ form.notes }}
-                        {% if form.notes.errors %}
-                        <div class="text-danger">{{ form.notes.errors }}</div>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-            
-            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-save"></i> {% if client %}Update{% else %}Save{% endif %} Client
-                </button>
-            </div>
-        </form>
+        </div>
     </div>
+    
+    {% if client and related_transactions %}
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0">Related Transactions</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Date</th>
+                                <th>Product</th>
+                                <th>Type</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for transaction in related_transactions %}
+                            <tr>
+                                <td>{{ transaction.id }}</td>
+                                <td>{{ transaction.transaction_date|date:"Y-m-d" }}</td>
+                                <td>{{ transaction.product.name|truncatechars:15 }}</td>
+                                <td>
+                                    {% if transaction.transaction_type == 'in' %}
+                                    <span class="badge bg-primary">In</span>
+                                    {% elif transaction.transaction_type == 'out' %}
+                                    <span class="badge bg-info">Out</span>
+                                    {% elif transaction.transaction_type == 'wastage' %}
+                                    <span class="badge bg-danger">Wastage</span>
+                                    {% elif transaction.transaction_type == 'return' %}
+                                    <span class="badge bg-warning">Return</span>
+                                    {% elif transaction.transaction_type == 'transfer' %}
+                                    <span class="badge bg-success">Transfer</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ transaction.total_price }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="mt-3">
+                    <a href="{% url 'stock' %}?client_id={{ client.id }}" class="btn btn-sm btn-outline-primary">
+                        View All Transactions
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </div>
 {% endblock %} 

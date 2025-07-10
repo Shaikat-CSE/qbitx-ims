@@ -52,10 +52,13 @@
                         <td>{{ client.country|default:"-" }}</td>
                         <td>
                             <div class="btn-group">
-                                <a href="{% url 'client_edit' client.id %}" class="btn btn-sm btn-outline-secondary">
+                                <a href="{% url 'client_edit' client.id %}" class="btn btn-sm btn-outline-secondary" data-bs-toggle="tooltip" title="Edit Client">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal" data-client-id="{{ client.id }}" data-client-name="{{ client.name }}">
+                                <a href="{% url 'stock' %}?client_id={{ client.id }}" class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip" title="View Transactions">
+                                    <i class="fas fa-exchange-alt"></i>
+                                </a>
+                                <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal" data-client-id="{{ client.id }}" data-client-name="{{ client.name }}" data-bs-toggle="tooltip" title="Delete Client">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </div>
@@ -140,6 +143,12 @@
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Initialize tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        });
+        
         // Set up delete modal
         const deleteModal = document.getElementById('deleteModal');
         if (deleteModal) {

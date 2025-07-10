@@ -1,4 +1,4 @@
-{% load custom_filters %}
+{% load inventory_extras %}
 <!DOCTYPE html>
 <html>
 <head>
@@ -184,7 +184,9 @@
                 <th class="col-uom">UOM</th>
                 <th class="col-price text-right">Buying</th>
                 <th class="col-price text-right">Selling</th>
-                <th class="col-price text-right">Wastage</th>
+                <th class="col-price text-right">VAT (%)</th>
+                <th class="col-price text-right">AIT (%)</th>
+                <th class="col-price text-right">Final</th>
                 <th class="col-total text-right">Total</th>
                 <th class="col-price text-right">Profit/Loss</th>
                 <th class="col-client">Client</th>
@@ -195,7 +197,7 @@
             {% if grouped_data %}
                 {% for group in grouped_data %}
                 <tr>
-                    <td colspan="11" class="group-header">{{ group.name }}</td>
+                    <td colspan="13" class="group-header">{{ group.name }}</td>
                 </tr>
                 {% for transaction in group.transactions %}
                 <tr>
@@ -205,7 +207,9 @@
                     <td>{{ transaction.product.unit_of_measure }}</td>
                     <td class="text-right">{{ transaction.buying_price }}</td>
                     <td class="text-right">{{ transaction.selling_price }}</td>
-                    <td class="text-right">{{ transaction.wastage_amount }}</td>
+                    <td class="text-right">{{ transaction.vat_rate|default:0 }}</td>
+                    <td class="text-right">{{ transaction.ait_rate|default:0 }}</td>
+                    <td class="text-right">{% if transaction.apply_taxes and transaction.final_price %}{{ transaction.final_price }}{% else %}{{ transaction.selling_price }}{% endif %}</td>
                     <td class="text-right">{{ transaction.total_price }}</td>
                     <td class="text-right">{{ transaction.profit_loss }}</td>
                     <td>{% if transaction.client %}{{ transaction.client.name }}{% else %}-{% endif %}</td>
@@ -213,7 +217,7 @@
                 </tr>
                 {% endfor %}
                 <tr class="subtotal-row">
-                    <td colspan="7" class="text-right">Subtotal:</td>
+                    <td colspan="9" class="text-right">Subtotal:</td>
                     <td class="text-right">{{ group.subtotal|floatformat:2 }}</td>
                     <td colspan="3"></td>
                 </tr>
@@ -227,7 +231,9 @@
                     <td>{{ transaction.product.unit_of_measure }}</td>
                     <td class="text-right">{{ transaction.buying_price }}</td>
                     <td class="text-right">{{ transaction.selling_price }}</td>
-                    <td class="text-right">{{ transaction.wastage_amount }}</td>
+                    <td class="text-right">{{ transaction.vat_rate|default:0 }}</td>
+                    <td class="text-right">{{ transaction.ait_rate|default:0 }}</td>
+                    <td class="text-right">{% if transaction.apply_taxes and transaction.final_price %}{{ transaction.final_price }}{% else %}{{ transaction.selling_price }}{% endif %}</td>
                     <td class="text-right">{{ transaction.total_price }}</td>
                     <td class="text-right">{{ transaction.profit_loss }}</td>
                     <td>{% if transaction.client %}{{ transaction.client.name }}{% else %}-{% endif %}</td>
@@ -236,7 +242,7 @@
                 {% endfor %}
             {% endif %}
             <tr class="total-row">
-                <td colspan="7" class="text-right">Total Sales:</td>
+                <td colspan="9" class="text-right">Total Sales:</td>
                 <td class="text-right">{{ total_sales|floatformat:2 }}</td>
                 <td colspan="3"></td>
             </tr>
@@ -253,7 +259,9 @@
                 <th class="col-qty text-right">Qty</th>
                 <th class="col-uom">UOM</th>
                 <th class="col-price text-right">Buying Price</th>
-                <th class="col-price text-right">Wastage</th>
+                <th class="col-price text-right">VAT (%)</th>
+                <th class="col-price text-right">AIT (%)</th>
+                <th class="col-price text-right">Final Price</th>
                 <th class="col-total text-right">Total Price</th>
                 <th class="col-client">Supplier</th>
                 <th class="col-ref">Reference</th>
@@ -263,7 +271,7 @@
             {% if grouped_data %}
                 {% for group in grouped_data %}
                 <tr>
-                    <td colspan="9" class="group-header">{{ group.name }}</td>
+                    <td colspan="11" class="group-header">{{ group.name }}</td>
                 </tr>
                 {% for transaction in group.transactions %}
                 <tr>
@@ -272,14 +280,16 @@
                     <td class="text-right">{{ transaction.quantity }}</td>
                     <td>{{ transaction.product.unit_of_measure }}</td>
                     <td class="text-right">{{ transaction.buying_price }}</td>
-                    <td class="text-right">{{ transaction.wastage_amount }}</td>
+                    <td class="text-right">{{ transaction.vat_rate|default:0 }}</td>
+                    <td class="text-right">{{ transaction.ait_rate|default:0 }}</td>
+                    <td class="text-right">{% if transaction.apply_taxes and transaction.final_price %}{{ transaction.final_price }}{% else %}{{ transaction.buying_price }}{% endif %}</td>
                     <td class="text-right">{{ transaction.total_price }}</td>
                     <td>{% if transaction.product.supplier %}{{ transaction.product.supplier.name }}{% else %}-{% endif %}</td>
                     <td>{{ transaction.reference_number|default:"-" }}</td>
                 </tr>
                 {% endfor %}
                 <tr class="subtotal-row">
-                    <td colspan="6" class="text-right">Subtotal:</td>
+                    <td colspan="8" class="text-right">Subtotal:</td>
                     <td class="text-right">{{ group.subtotal|floatformat:2 }}</td>
                     <td colspan="2"></td>
                 </tr>
@@ -292,7 +302,9 @@
                     <td class="text-right">{{ transaction.quantity }}</td>
                     <td>{{ transaction.product.unit_of_measure }}</td>
                     <td class="text-right">{{ transaction.buying_price }}</td>
-                    <td class="text-right">{{ transaction.wastage_amount }}</td>
+                    <td class="text-right">{{ transaction.vat_rate|default:0 }}</td>
+                    <td class="text-right">{{ transaction.ait_rate|default:0 }}</td>
+                    <td class="text-right">{% if transaction.apply_taxes and transaction.final_price %}{{ transaction.final_price }}{% else %}{{ transaction.buying_price }}{% endif %}</td>
                     <td class="text-right">{{ transaction.total_price }}</td>
                     <td>{% if transaction.product.supplier %}{{ transaction.product.supplier.name }}{% else %}-{% endif %}</td>
                     <td>{{ transaction.reference_number|default:"-" }}</td>
@@ -300,7 +312,7 @@
                 {% endfor %}
             {% endif %}
             <tr class="total-row">
-                <td colspan="6" class="text-right">Total Purchases:</td>
+                <td colspan="8" class="text-right">Total Purchases:</td>
                 <td class="text-right">{{ total_purchases|floatformat:2 }}</td>
                 <td colspan="2"></td>
             </tr>
@@ -349,7 +361,15 @@
                     <td class="text-right">{{ transaction.buying_price }}</td>
                     <td class="text-right">{{ transaction.unit_price }}</td>
                     <td class="text-right">{{ transaction.wastage_amount }}</td>
-                    <td class="text-right">{{ transaction.profit_loss }}</td>
+                    <td class="text-right">
+                        {% if transaction.profit_loss > 0 %}
+                        {{ transaction.profit_loss }}
+                        {% elif transaction.profit_loss < 0 %}
+                        {{ transaction.profit_loss|floatformat:2|cut:"-" }}
+                        {% else %}
+                        {{ transaction.profit_loss }}
+                        {% endif %}
+                    </td>
                     <td class="text-right">{{ transaction.total_price }}</td>
                     <td>{{ transaction.notes|truncatechars:30|default:"-" }}</td>
                 </tr>
@@ -380,7 +400,15 @@
                     <td class="text-right">{{ transaction.buying_price }}</td>
                     <td class="text-right">{{ transaction.unit_price }}</td>
                     <td class="text-right">{{ transaction.wastage_amount }}</td>
-                    <td class="text-right">{{ transaction.profit_loss }}</td>
+                    <td class="text-right">
+                        {% if transaction.profit_loss > 0 %}
+                        {{ transaction.profit_loss }}
+                        {% elif transaction.profit_loss < 0 %}
+                        {{ transaction.profit_loss|floatformat:2|cut:"-" }}
+                        {% else %}
+                        {{ transaction.profit_loss }}
+                        {% endif %}
+                    </td>
                     <td class="text-right">{{ transaction.total_price }}</td>
                     <td>{{ transaction.notes|truncatechars:30|default:"-" }}</td>
                 </tr>
@@ -391,8 +419,180 @@
                 <td class="text-right">{{ total_wastage|floatformat:2 }}</td>
                 <td></td>
             </tr>
+            <tr>
+                <td colspan="10" class="small-text note-text">
+                    * The total wastage value includes product costs (quantity × buying price) and any additional wastage costs.
+                </td>
+            </tr>
         </tbody>
     </table>
+    
+    {% elif report_type == 'payment' %}
+    <!-- Payment Report -->
+    <table>
+        <thead>
+            <tr>
+                <th class="col-date">Date</th>
+                <th class="col-product">Product</th>
+                <th>Transaction Type</th>
+                <th class="col-qty text-right">Qty</th>
+                <th class="col-total text-right">Total Price</th>
+                <th>Payment Status</th>
+                <th class="col-price text-right">Amount Paid</th>
+                <th class="col-price text-right">Amount Due</th>
+                <th class="col-date">Due Date</th>
+                <th>Client/Supplier</th>
+                <th class="col-ref">Reference</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if grouped_data %}
+                {% for group in grouped_data %}
+                <tr>
+                    <td colspan="11" class="group-header">{{ group.name }}</td>
+                </tr>
+                {% for transaction in group.transactions %}
+                <tr>
+                    <td>{{ transaction.transaction_date|date:"Y-m-d" }}</td>
+                    <td>{{ transaction.product.name }}</td>
+                    <td>
+                        {% if transaction.transaction_type == 'in' %}
+                        Stock In
+                        {% elif transaction.transaction_type == 'out' %}
+                        Stock Out
+                        {% elif transaction.transaction_type == 'return' %}
+                        Return
+                        {% else %}
+                        {{ transaction.get_transaction_type_display }}
+                        {% endif %}
+                    </td>
+                    <td class="text-right">{{ transaction.quantity }}</td>
+                    <td class="text-right">{{ transaction.total_price }}</td>
+                    <td>
+                        {% if transaction.payment_status == 'paid' %}
+                        Paid
+                        {% elif transaction.payment_status == 'due' %}
+                        Due
+                        {% elif transaction.payment_status == 'partial' %}
+                        Partially Paid
+                        {% elif transaction.payment_status == 'credit' %}
+                        Credit
+                        {% else %}
+                        N/A
+                        {% endif %}
+                    </td>
+                    <td class="text-right">{{ transaction.amount_paid }}</td>
+                    <td class="text-right">{{ transaction.amount_due }}</td>
+                    <td>{% if transaction.payment_due_date %}{{ transaction.payment_due_date|date:"Y-m-d" }}{% else %}-{% endif %}</td>
+                    <td>
+                        {% if transaction.transaction_type == 'out' or transaction.transaction_type == 'return' %}
+                            {% if transaction.client %}{{ transaction.client.name }}{% else %}-{% endif %}
+                        {% elif transaction.transaction_type == 'in' %}
+                            {% if transaction.supplier %}{{ transaction.supplier.name }}{% else %}-{% endif %}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>{{ transaction.reference_number|default:"-" }}</td>
+                </tr>
+                {% endfor %}
+                <tr class="subtotal-row">
+                    <td colspan="6" class="text-right">Subtotal:</td>
+                    <td class="text-right">{{ group.total_paid|floatformat:2 }}</td>
+                    <td class="text-right">{{ group.total_due|floatformat:2 }}</td>
+                    <td colspan="3"></td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                {% for transaction in payment_transactions %}
+                <tr>
+                    <td>{{ transaction.transaction_date|date:"Y-m-d" }}</td>
+                    <td>{{ transaction.product.name }}</td>
+                    <td>
+                        {% if transaction.transaction_type == 'in' %}
+                        Stock In
+                        {% elif transaction.transaction_type == 'out' %}
+                        Stock Out
+                        {% elif transaction.transaction_type == 'return' %}
+                        Return
+                        {% else %}
+                        {{ transaction.get_transaction_type_display }}
+                        {% endif %}
+                    </td>
+                    <td class="text-right">{{ transaction.quantity }}</td>
+                    <td class="text-right">{{ transaction.total_price }}</td>
+                    <td>
+                        {% if transaction.payment_status == 'paid' %}
+                        Paid
+                        {% elif transaction.payment_status == 'due' %}
+                        Due
+                        {% elif transaction.payment_status == 'partial' %}
+                        Partially Paid
+                        {% elif transaction.payment_status == 'credit' %}
+                        Credit
+                        {% else %}
+                        N/A
+                        {% endif %}
+                    </td>
+                    <td class="text-right">{{ transaction.amount_paid }}</td>
+                    <td class="text-right">{{ transaction.amount_due }}</td>
+                    <td>{% if transaction.payment_due_date %}{{ transaction.payment_due_date|date:"Y-m-d" }}{% else %}-{% endif %}</td>
+                    <td>
+                        {% if transaction.transaction_type == 'out' or transaction.transaction_type == 'return' %}
+                            {% if transaction.client %}{{ transaction.client.name }}{% else %}-{% endif %}
+                        {% elif transaction.transaction_type == 'in' %}
+                            {% if transaction.supplier %}{{ transaction.supplier.name }}{% else %}-{% endif %}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>{{ transaction.reference_number|default:"-" }}</td>
+                </tr>
+                {% endfor %}
+            {% endif %}
+            <tr class="total-row">
+                <td colspan="6" class="text-right">Total:</td>
+                <td class="text-right">{{ total_paid|floatformat:2 }}</td>
+                <td class="text-right">{{ total_due|floatformat:2 }}</td>
+                <td colspan="3"></td>
+            </tr>
+        </tbody>
+    </table>
+    
+    {% if payment_records %}
+    <h3>Payment Transactions</h3>
+    <table>
+        <thead>
+            <tr>
+                <th class="col-date">Date</th>
+                <th class="col-product">Product</th>
+                <th class="col-price text-right">Amount</th>
+                <th>Payment Method</th>
+                <th class="col-ref">Reference</th>
+                <th>Created By</th>
+                <th class="col-notes">Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for payment in payment_records %}
+            <tr>
+                <td>{{ payment.payment_date|date:"Y-m-d" }}</td>
+                <td>{{ payment.transaction.product.name }}</td>
+                <td class="text-right">{{ payment.amount }}</td>
+                <td>{{ payment.get_payment_method_display }}</td>
+                <td>{{ payment.reference|default:"-" }}</td>
+                <td>{{ payment.created_by.username }}</td>
+                <td>{{ payment.notes|truncatechars:30|default:"-" }}</td>
+            </tr>
+            {% endfor %}
+            <tr class="total-row">
+                <td colspan="2" class="text-right">Total Payments:</td>
+                <td class="text-right">{{ total_payments|floatformat:2 }}</td>
+                <td colspan="4"></td>
+            </tr>
+        </tbody>
+    </table>
+    {% endif %}
     {% endif %}
 
     <div class="terms">

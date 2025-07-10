@@ -2,87 +2,358 @@
 
 {% block title %}Dashboard - QBITX IMS Transform Suppliers{% endblock %}
 
+{% block extra_css %}
+<style>
+    .stat-card {
+        border-radius: 10px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        overflow: hidden;
+        border: none;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    }
+    
+    .stat-icon {
+        font-size: 2.5rem;
+        opacity: 0.8;
+    }
+    
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+    }
+    
+    .stat-label {
+        font-size: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        opacity: 0.8;
+    }
+    
+    .chart-container {
+        position: relative;
+        height: 300px;
+        margin-bottom: 1rem;
+    }
+    
+    .quick-actions .btn {
+        border-radius: 50px;
+        padding: 0.5rem 1.5rem;
+        margin-right: 0.5rem;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    
+    .dashboard-section {
+        margin-bottom: 2rem;
+    }
+    
+    .section-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #f8f9fa;
+    }
+    
+    .low-stock-badge {
+        position: absolute;
+        top: -10px;
+        right: -10px;
+        border-radius: 50%;
+        width: 25px;
+        height: 25px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        font-weight: bold;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+    
+    .info-card {
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        border: none;
+        height: 100%;
+    }
+    
+    .table-container {
+        max-height: 300px;
+        overflow-y: auto;
+    }
+    
+    .gradient-primary {
+        background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
+    }
+    
+    .gradient-success {
+        background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+    }
+    
+    .gradient-danger {
+        background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+    }
+    
+    .gradient-warning {
+        background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+    }
+    
+    .gradient-blue {
+        background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+        color: white;
+    }
+    
+    .gradient-purple {
+        background: linear-gradient(135deg, #9333EA 0%, #7E22CE 100%);
+        color: white;
+    }
+    
+    .summary-card {
+        border-left: 4px solid;
+        border-radius: 5px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+    
+    .summary-card.border-primary {
+        border-left-color: #6366F1;
+    }
+    
+    .summary-card.border-success {
+        border-left-color: #10B981;
+    }
+    
+    .summary-card.border-danger {
+        border-left-color: #EF4444;
+    }
+    
+    .summary-card.border-warning {
+        border-left-color: #F59E0B;
+    }
+    
+    .activity-timeline {
+        position: relative;
+        padding-left: 30px;
+    }
+    
+    .activity-timeline::before {
+        content: '';
+        position: absolute;
+        left: 10px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background-color: #e9ecef;
+    }
+    
+    .activity-item {
+        position: relative;
+        margin-bottom: 1.5rem;
+    }
+    
+    .activity-item::before {
+        content: '';
+        position: absolute;
+        left: -30px;
+        top: 5px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background-color: #6366F1;
+        border: 2px solid #fff;
+        box-shadow: 0 0 0 2px #6366F1;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2">Dashboard</h1>
-    <div class="btn-toolbar mb-2 mb-md-0">
-        <div class="btn-group me-2">
-            <a href="{% url 'stock' %}" class="btn btn-sm btn-outline-secondary">
-                <i class="fas fa-plus-circle"></i> New Stock Entry
-            </a>
-            <a href="{% url 'product_create' %}" class="btn btn-sm btn-outline-secondary">
-                <i class="fas fa-plus-circle"></i> New Product
-            </a>
+<!-- Welcome Banner -->
+<div class="p-4 mb-4 bg-white rounded-3 shadow-sm">
+    <div class="container-fluid py-2">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="display-6 fw-bold">Welcome to QBITX IMS</h1>
+                <p class="col-md-8 fs-5">Today is {{ today|date:"l, F j, Y" }}</p>
+            </div>
+            <div class="quick-actions">
+                <a href="{% url 'stock_create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus-circle me-2"></i>New Stock Entry
+                </a>
+                <a href="{% url 'product_create' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-box me-2"></i>Add Product
+                </a>
+            </div>
         </div>
-        <a href="{% url 'dashboard' %}" class="btn btn-sm btn-outline-secondary">
-            <i class="fas fa-sync-alt"></i> Refresh
-        </a>
     </div>
 </div>
 
-<div class="current-date mb-4">
-    <i class="fas fa-calendar-day me-2"></i>
-    <strong>Today:</strong> <span>{{ today|date:"F j, Y" }}</span>
-</div>
-
-<!-- Status Cards -->
-<div class="row mb-4">
+<!-- Key Metrics -->
+<div class="row g-4 mb-4">
     <div class="col-md-3">
-        <div class="card text-white bg-primary mb-3 dashboard-card">
-            <div class="card-body">
-                <h4 class="card-title">Active Products</h4>
-                <h2 class="display-4">{{ total_products }}</h2>
-                <p class="card-text">As on {{ today|date:"M j, Y" }}</p>
+        <div class="card stat-card h-100 gradient-primary text-white">
+            <div class="card-body d-flex flex-column">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="stat-label">Active Products</div>
+                    <div class="stat-icon"><i class="fas fa-boxes"></i></div>
+                </div>
+                <div class="stat-value mb-2">{{ total_products }}</div>
+                <div class="mt-auto">
+                    <a href="{% url 'products' %}" class="text-white text-decoration-none">
+                        <small>View all products <i class="fas fa-arrow-right ms-1"></i></small>
+                    </a>
+                </div>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card text-white bg-success mb-3 dashboard-card">
-            <div class="card-body">
-                <h4 class="card-title">Inventory Value</h4>
-                <h2 class="display-4">{{ inventory_value }}</h2>
-                <p class="card-text">As on {{ today|date:"M j, Y" }}</p>
+        <div class="card stat-card h-100 gradient-success text-white">
+            <div class="card-body d-flex flex-column">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="stat-label">Inventory Value</div>
+                    <div class="stat-icon"><i class="fas fa-dollar-sign"></i></div>
+                </div>
+                <div class="stat-value mb-2">{{ inventory_value|floatformat:-1 }}</div>
+                <div class="mt-auto">
+                    <a href="{% url 'reports' %}?type=inventory" class="text-white text-decoration-none">
+                        <small>View inventory report <i class="fas fa-arrow-right ms-1"></i></small>
+                    </a>
+                </div>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card text-white bg-danger mb-3 dashboard-card">
-            <div class="card-body">
-                <h4 class="card-title">Low Stock Items</h4>
-                <h2 class="display-4">{{ low_stock_count }}</h2>
-                <p class="card-text">As on {{ today|date:"M j, Y" }}</p>
+        <div class="card stat-card h-100 gradient-danger text-white">
+            <div class="card-body d-flex flex-column">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="stat-label">Low Stock Items</div>
+                    <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                </div>
+                <div class="stat-value mb-2">{{ low_stock_count }}</div>
+                <div class="mt-auto">
+                    <a href="{% url 'products' %}" class="text-white text-decoration-none">
+                        <small>View low stock items <i class="fas fa-arrow-right ms-1"></i></small>
+                    </a>
+                </div>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card text-white bg-secondary mb-3 dashboard-card">
-            <div class="card-body">
-                <h4 class="card-title">Total Wastage</h4>
-                <h2 class="display-4">{{ total_wastage }}</h2>
-                <div class="d-flex justify-content-end mt-2">
-                    <a href="{% url 'reports' %}?type=wastage" class="btn btn-primary btn-sm me-2">View Details</a>
+        <div class="card stat-card h-100 gradient-warning text-white">
+            <div class="card-body d-flex flex-column">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="stat-label">Total Wastage</div>
+                    <div class="stat-icon"><i class="fas fa-trash-alt"></i></div>
+                </div>
+                <div class="stat-value mb-2">{{ total_wastage|floatformat:-1 }}</div>
+                <div class="mt-auto">
+                    <a href="{% url 'reports' %}?type=wastage" class="text-white text-decoration-none">
+                        <small>View wastage report <i class="fas fa-arrow-right ms-1"></i></small>
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Charts Row -->
-<div class="row mb-4">
-    <div class="col-md-5">
-        <div class="card">
+<!-- Financial Metrics -->
+<div class="row g-4 mb-4">
+    <div class="col-md-6">
+        <div class="card stat-card h-100 gradient-blue">
+            <div class="card-body d-flex flex-column">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="stat-label">Due Payments (Receivables)</div>
+                    <div class="stat-icon"><i class="fas fa-hand-holding-usd"></i></div>
+                </div>
+                <div class="stat-value mb-2">{{ due_payments|floatformat:-1 }}</div>
+                <div class="mt-auto">
+                    <a href="{% url 'payments' %}?payment_status=due,partial&transaction_type=out" class="text-white text-decoration-none">
+                        <small>View all receivables <i class="fas fa-arrow-right ms-1"></i></small>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card stat-card h-100 gradient-purple">
+            <div class="card-body d-flex flex-column">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="stat-label">Due Payables (Payables)</div>
+                    <div class="stat-icon"><i class="fas fa-file-invoice-dollar"></i></div>
+                </div>
+                <div class="stat-value mb-2">{{ due_payables|floatformat:-1 }}</div>
+                <div class="mt-auto">
+                    <a href="{% url 'payments' %}?payment_status=due,partial&transaction_type=in" class="text-white text-decoration-none">
+                        <small>View all payables <i class="fas fa-arrow-right ms-1"></i></small>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card summary-card border-primary h-100">
             <div class="card-body">
-                <h5 class="card-title">Top 5 Products by Value</h5>
+                <h6 class="card-title text-primary"><i class="fas fa-shopping-cart me-2"></i>Recent Sales</h6>
+                <h3 class="mb-0">{{ recent_sales|floatformat:-1 }}</h3>
+                <p class="text-muted small mb-0">Last 24 hours</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card summary-card border-success h-100">
+            <div class="card-body">
+                <h6 class="card-title text-success"><i class="fas fa-truck-loading me-2"></i>Recent Purchases</h6>
+                <h3 class="mb-0">{{ top_products|length }}</h3>
+                <p class="text-muted small mb-0">Products in stock</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card summary-card border-danger h-100">
+            <div class="card-body">
+                <h6 class="card-title text-danger"><i class="fas fa-file-invoice-dollar me-2"></i>Pending Invoices</h6>
+                <h3 class="mb-0">{{ pending_invoices_count }}</h3>
+                <p class="text-muted small mb-0">Awaiting payment</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card summary-card border-warning h-100">
+            <div class="card-body">
+                <h6 class="card-title text-warning"><i class="fas fa-clock me-2"></i>Expiring Soon</h6>
+                <h3 class="mb-0">{{ expiring_soon_count }}</h3>
+                <p class="text-muted small mb-0">Products expiring in 30 days</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Section -->
+<div class="row g-4 mb-4">
+    <div class="col-md-8">
+        <div class="card info-card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">Sales Trend - Last 30 Days</h5>
+            </div>
+            <div class="card-body">
                 <div class="chart-container">
-                    <canvas id="topProductsValueChart"></canvas>
+                    <canvas id="salesTrendChart"></canvas>
                 </div>
             </div>
         </div>
     </div>
-    <div class="col-md-7">
-        <div class="card">
+    <div class="col-md-4">
+        <div class="card info-card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">Products by Category</h5>
+            </div>
             <div class="card-body">
-                <h5 class="card-title">Products by Category</h5>
                 <div class="chart-container">
                     <canvas id="categoryPieChart"></canvas>
                 </div>
@@ -91,40 +362,240 @@
     </div>
 </div>
 
-<div class="row mb-4">
+<div class="row g-4 mb-4">
     <div class="col-md-6">
-        <div class="card">
+        <div class="card info-card">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Top Products by Value</h5>
+                <a href="{% url 'reports' %}?type=inventory" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
             <div class="card-body">
-                <h5 class="card-title">Sales Trend for Last 30 Days</h5>
                 <div class="chart-container">
-                    <canvas id="salesTrendChart"></canvas>
+                    <canvas id="topProductsValueChart"></canvas>
                 </div>
             </div>
         </div>
     </div>
     <div class="col-md-6">
-        <div class="card">
+        <div class="card info-card">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Low Stock Products</h5>
+                <a href="{% url 'products' %}" class="btn btn-sm btn-outline-danger">View All</a>
+            </div>
             <div class="card-body">
-                <h5 class="card-title">Top 50 Products</h5>
-                <div class="table-responsive">
-                    <table class="table table-striped table-sm top-products-table">
+                <div class="table-container">
+                    <table class="table table-sm table-hover">
                         <thead>
                             <tr>
-                                <th>Product Description</th>
-                                <th>Unit</th>
-                                <th>Quantity</th>
+                                <th>Product</th>
+                                <th>Current Stock</th>
+                                <th>Reorder Level</th>
+                                <th>Status</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for product in top_products %}
+                                {% if product.is_low_stock %}
+                                <tr>
+                                    <td>{{ product.name }}</td>
+                                    <td>{{ product.quantity }} {{ product.unit_of_measure }}</td>
+                                    <td>{{ product.reorder_level }}</td>
+                                    <td>
+                                        <span class="badge bg-danger">Low Stock</span>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                            {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center">No low stock items</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity and Quick Links -->
+<div class="row g-4">
+    <div class="col-md-8">
+        <div class="card info-card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">Recent Products</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-container">
+                    <table class="table table-sm table-hover">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Category</th>
+                                <th>Stock</th>
+                                <th>Price</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in top_products|slice:":5" %}
                             <tr>
                                 <td>{{ product.name }}</td>
-                                <td>{{ product.unit_of_measure }}</td>
-                                <td>{{ product.quantity }}</td>
+                                <td>{{ product.category.name|default:"--" }}</td>
+                                <td>{{ product.quantity }} {{ product.unit_of_measure }}</td>
+                                <td>{{ product.selling_price|floatformat:-1 }}</td>
+                                <td>
+                                    <a href="{% url 'product_edit' product.id %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{% url 'stock_create' %}?product_id={{ product.id }}" class="btn btn-sm btn-outline-success">
+                                        <i class="fas fa-exchange-alt"></i>
+                                    </a>
+                                </td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="3" class="text-center">No products available</td>
+                                <td colspan="5" class="text-center">No products available</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card info-card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">Quick Links</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    <a href="{% url 'stock_create' %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-plus-circle text-primary me-2"></i>
+                            New Stock Entry
+                        </div>
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                    <a href="{% url 'product_create' %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-box text-success me-2"></i>
+                            Add New Product
+                        </div>
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                    <a href="{% url 'reports' %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-chart-bar text-info me-2"></i>
+                            Generate Reports
+                        </div>
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                    <a href="{% url 'invoices' %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-file-invoice-dollar text-warning me-2"></i>
+                            Manage Invoices
+                        </div>
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                    <a href="{% url 'suppliers' %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-truck text-danger me-2"></i>
+                            View Suppliers
+                        </div>
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Financial Details Section -->
+<div class="row g-4 mt-4">
+    <!-- Due Payments (Receivables) -->
+    <div class="col-md-6">
+        <div class="card info-card">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Recent Due Payments (Receivables)</h5>
+                <a href="{% url 'payments' %}?payment_status=due,partial&transaction_type=out" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body">
+                <div class="table-container">
+                    <table class="table table-sm table-hover">
+                        <thead>
+                            <tr>
+                                <th>Client</th>
+                                <th>Product</th>
+                                <th>Date</th>
+                                <th>Amount Due</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for transaction in recent_due_payments %}
+                            <tr>
+                                <td>{{ transaction.client.name|default:"--" }}</td>
+                                <td>{{ transaction.product.name }}</td>
+                                <td>{{ transaction.transaction_date|date:"Y-m-d" }}</td>
+                                <td>{{ transaction.amount_due|floatformat:-1 }}</td>
+                                <td>
+                                    <a href="{% url 'payment_for_transaction' transaction.id %}" class="btn btn-sm btn-outline-success">
+                                        <i class="fas fa-money-bill-wave"></i>
+                                    </a>
+                                    <a href="{% url 'generate_invoice_from_transaction' transaction.id %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-file-invoice"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center">No due payments</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Due Payables -->
+    <div class="col-md-6">
+        <div class="card info-card">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Recent Due Payables</h5>
+                <a href="{% url 'payments' %}?payment_status=due,partial&transaction_type=in" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body">
+                <div class="table-container">
+                    <table class="table table-sm table-hover">
+                        <thead>
+                            <tr>
+                                <th>Supplier</th>
+                                <th>Product</th>
+                                <th>Date</th>
+                                <th>Amount Due</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for transaction in recent_due_payables %}
+                            <tr>
+                                <td>{{ transaction.supplier.name|default:"--" }}</td>
+                                <td>{{ transaction.product.name }}</td>
+                                <td>{{ transaction.transaction_date|date:"Y-m-d" }}</td>
+                                <td>{{ transaction.amount_due|floatformat:-1 }}</td>
+                                <td>
+                                    <a href="{% url 'payment_for_transaction' transaction.id %}" class="btn btn-sm btn-outline-success">
+                                        <i class="fas fa-money-bill-wave"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center">No due payables</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -139,6 +610,125 @@
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Enable Chart.js DataLabels plugin globally
+        Chart.register(ChartDataLabels);
+        
+        // Sales Trend Chart
+        const salesTrendCtx = document.getElementById('salesTrendChart').getContext('2d');
+        const salesTrendChart = new Chart(salesTrendCtx, {
+            type: 'line',
+            data: {
+                labels: {{ sales_dates|safe }},
+                datasets: [{
+                    label: 'Sales',
+                    data: {{ sales_values|safe }},
+                    fill: {
+                        target: 'origin',
+                        above: 'rgba(75, 192, 192, 0.1)',
+                    },
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 2,
+                    pointBackgroundColor: 'rgba(75, 192, 192, 1)',
+                    pointBorderColor: '#fff',
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    datalabels: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleFont: {
+                            size: 14
+                        },
+                        bodyFont: {
+                            size: 13
+                        },
+                        callbacks: {
+                            label: function(context) {
+                                const value = context.parsed.y;
+                                // Remove trailing zeros
+                                return `Sales: ${value % 1 === 0 ? value : value.toFixed(2).replace(/\.?0+$/, '')}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            maxRotation: 0,
+                            autoSkip: true,
+                            maxTicksLimit: 10
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Category Pie Chart
+        const categoryPieCtx = document.getElementById('categoryPieChart').getContext('2d');
+        const categoryPieChart = new Chart(categoryPieCtx, {
+            type: 'doughnut',
+            data: {
+                labels: {{ category_labels|safe }},
+                datasets: [{
+                    data: {{ category_values|safe }},
+                    backgroundColor: [
+                        'rgba(99, 102, 241, 0.8)',
+                        'rgba(16, 185, 129, 0.8)',
+                        'rgba(239, 68, 68, 0.8)',
+                        'rgba(245, 158, 11, 0.8)',
+                        'rgba(107, 114, 128, 0.8)',
+                        'rgba(139, 92, 246, 0.8)',
+                        'rgba(14, 165, 233, 0.8)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            boxWidth: 12,
+                            padding: 15
+                        }
+                    },
+                    datalabels: {
+                        color: '#fff',
+                        font: {
+                            weight: 'bold',
+                            size: 11
+                        },
+                        formatter: function(value, context) {
+                            return value > 0 ? value : '';
+                        }
+                    }
+                },
+                cutout: '60%'
+            }
+        });
+
         // Top Products by Value Chart
         const topProductsValueCtx = document.getElementById('topProductsValueChart').getContext('2d');
         const topProductsValueChart = new Chart(topProductsValueCtx, {
@@ -149,102 +739,54 @@
                     label: 'Total Value',
                     data: {{ top_products_values|safe }},
                     backgroundColor: [
-                        'rgba(255, 99, 132, 0.7)',
-                        'rgba(54, 162, 235, 0.7)',
-                        'rgba(255, 206, 86, 0.7)',
-                        'rgba(75, 192, 192, 0.7)',
-                        'rgba(153, 102, 255, 0.7)'
+                        'rgba(99, 102, 241, 0.7)',
+                        'rgba(16, 185, 129, 0.7)',
+                        'rgba(239, 68, 68, 0.7)',
+                        'rgba(245, 158, 11, 0.7)',
+                        'rgba(107, 114, 128, 0.7)'
                     ],
                     borderColor: [
-                        'rgba(255, 99, 132, 1)',
-                        'rgba(54, 162, 235, 1)',
-                        'rgba(255, 206, 86, 1)',
-                        'rgba(75, 192, 192, 1)',
-                        'rgba(153, 102, 255, 1)'
+                        'rgba(99, 102, 241, 1)',
+                        'rgba(16, 185, 129, 1)',
+                        'rgba(239, 68, 68, 1)',
+                        'rgba(245, 158, 11, 1)',
+                        'rgba(107, 114, 128, 1)'
                     ],
-                    borderWidth: 1
+                    borderWidth: 1,
+                    borderRadius: 4
                 }]
             },
             options: {
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
-                },
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
                 plugins: {
+                    legend: {
+                        display: false
+                    },
                     datalabels: {
-                        anchor: 'end',
-                        align: 'top',
-                        formatter: function(value) {
-                            return '$' + value;
-                        }
-                    }
-                }
-            }
-        });
-
-        // Category Pie Chart
-        const categoryPieCtx = document.getElementById('categoryPieChart').getContext('2d');
-        const categoryPieChart = new Chart(categoryPieCtx, {
-            type: 'pie',
-            data: {
-                labels: {{ category_labels|safe }},
-                datasets: [{
-                    data: {{ category_values|safe }},
-                    backgroundColor: [
-                        'rgba(255, 99, 132, 0.7)',
-                        'rgba(54, 162, 235, 0.7)',
-                        'rgba(255, 206, 86, 0.7)',
-                        'rgba(75, 192, 192, 0.7)',
-                        'rgba(153, 102, 255, 0.7)',
-                        'rgba(255, 159, 64, 0.7)',
-                        'rgba(201, 203, 207, 0.7)'
-                    ],
-                    borderColor: [
-                        'rgba(255, 99, 132, 1)',
-                        'rgba(54, 162, 235, 1)',
-                        'rgba(255, 206, 86, 1)',
-                        'rgba(75, 192, 192, 1)',
-                        'rgba(153, 102, 255, 1)',
-                        'rgba(255, 159, 64, 1)',
-                        'rgba(201, 203, 207, 1)'
-                    ],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                plugins: {
-                    datalabels: {
-                        formatter: function(value, context) {
-                            return context.chart.data.labels[context.dataIndex] + ': ' + value;
-                        },
                         color: '#fff',
                         font: {
                             weight: 'bold'
+                        },
+                        anchor: 'end',
+                        align: 'start',
+                        formatter: function(value) {
+                            return value;
                         }
                     }
-                }
-            }
-        });
-
-        // Sales Trend Chart
-        const salesTrendCtx = document.getElementById('salesTrendChart').getContext('2d');
-        const salesTrendChart = new Chart(salesTrendCtx, {
-            type: 'line',
-            data: {
-                labels: {{ sales_dates|safe }},
-                datasets: [{
-                    label: 'Sales',
-                    data: {{ sales_values|safe }},
-                    fill: false,
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    tension: 0.1
-                }]
-            },
-            options: {
+                },
                 scales: {
+                    x: {
+                        beginAtZero: true,
+                        grid: {
+                            display: false
+                        }
+                    },
                     y: {
-                        beginAtZero: true
+                        grid: {
+                            display: false
+                        }
                     }
                 }
             }

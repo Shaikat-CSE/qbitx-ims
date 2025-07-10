@@ -1,17 +1,20 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Add Stock Transaction - QBITX IMS Transform Suppliers{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2">Add Stock Transaction</h1>
+    <h1 class="h2">{{ title }}</h1>
     <div class="btn-toolbar mb-2 mb-md-0">
-        <a href="{% url 'stock' %}" class="btn btn-outline-secondary">
-            <i class="fas fa-arrow-left"></i> Back to Stock
+        <a href="{% url 'stock' %}" class="btn btn-sm btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Stock Transactions
         </a>
     </div>
 </div>
 
+<div class="row">
+    <div class="col-md-8">
 <div class="card">
     <div class="card-body">
         <form method="post" id="stockTransactionForm">
@@ -25,202 +28,322 @@
             </div>
             {% endif %}
             
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <div class="mb-3">
+                    <!-- Hidden fields for tax data -->
+                    {{ form.apply_taxes }}
+                    {{ form.vat_rate }}
+                    {{ form.ait_rate }}
+                    {{ form.final_price }}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
                         <label for="{{ form.product.id_for_label }}" class="form-label">Product</label>
                         {{ form.product }}
                         {% if form.product.errors %}
-                        <div class="text-danger">{{ form.product.errors }}</div>
+                            <div class="form-error">{{ form.product.errors.0 }}</div>
                         {% endif %}
                     </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="mb-3">
+                        
+                        <div class="col-md-6 mb-3">
                         <label for="{{ form.transaction_type.id_for_label }}" class="form-label">Transaction Type</label>
                         {{ form.transaction_type }}
                         {% if form.transaction_type.errors %}
-                        <div class="text-danger">{{ form.transaction_type.errors }}</div>
+                            <div class="form-error">{{ form.transaction_type.errors.0 }}</div>
                         {% endif %}
-                    </div>
                 </div>
             </div>
             
-            <div class="row mb-3">
-                <div class="col-md-4">
-                    <div class="mb-3">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
                         <label for="{{ form.quantity.id_for_label }}" class="form-label">Quantity</label>
                         {{ form.quantity }}
                         {% if form.quantity.errors %}
-                        <div class="text-danger">{{ form.quantity.errors }}</div>
+                            <div class="form-error">{{ form.quantity.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.transaction_date.id_for_label }}" class="form-label">Transaction Date</label>
+                            {{ form.transaction_date }}
+                            {% if form.transaction_date.errors %}
+                            <div class="form-error">{{ form.transaction_date.errors.0 }}</div>
                         {% endif %}
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <div class="mb-3">
-                        <label for="{{ form.buying_price.id_for_label }}" class="form-label">Buying Price (BDT)</label>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.buying_price.id_for_label }}" class="form-label">Buying Price</label>
                         {{ form.buying_price }}
-                        <small class="form-text text-muted">Auto-filled from product</small>
                         {% if form.buying_price.errors %}
-                        <div class="text-danger">{{ form.buying_price.errors }}</div>
+                            <div class="form-error">{{ form.buying_price.errors.0 }}</div>
                         {% endif %}
                     </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="mb-3">
-                        <label for="{{ form.selling_price.id_for_label }}" class="form-label">Selling Price (BDT)</label>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.selling_price.id_for_label }}" class="form-label">Selling Price</label>
                         {{ form.selling_price }}
-                        <small class="form-text text-muted">Auto-filled from product</small>
                         {% if form.selling_price.errors %}
-                        <div class="text-danger">{{ form.selling_price.errors }}</div>
+                            <div class="form-error">{{ form.selling_price.errors.0 }}</div>
                         {% endif %}
+                        </div>
                     </div>
+                    
+                    <!-- Tax Options (Always visible) -->
+                    <div id="taxOptionsSection" class="mb-3 border rounded p-3 bg-light">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="applyTaxes" name="apply_taxes">
+                            <label class="form-check-label" for="applyTaxes">
+                                Apply Tax Deductions
+                            </label>
+                        </div>
+                        
+                        <div id="taxDetails" class="mt-3" style="display: none;">
+                            <div class="row">
+                                <div class="col-md-6 mb-2">
+                                    <label for="vatRate" class="form-label">VAT Rate (%)</label>
+                                    <input type="number" class="form-control" id="vatRate" name="vat_rate" value="9.1" step="0.1">
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <label for="aitRate" class="form-label">AIT Rate (%)</label>
+                                    <input type="number" class="form-control" id="aitRate" name="ait_rate" value="5.0" step="0.1">
                 </div>
             </div>
             
-            <div class="row mb-3">
-                <div class="col-md-4">
+                            <div class="alert alert-info mt-2">
+                                <p class="mb-1"><strong>Tax Calculation:</strong></p>
+                                <p class="mb-1">1. VAT (<span id="vatRateDisplay">9.1</span>%) will be deducted from selling price</p>
+                                <p class="mb-1">2. AIT (<span id="aitRateDisplay">5.0</span>%) will be deducted from the remaining amount</p>
+                                <p class="mb-0">3. Final payable amount will be used for profit calculation</p>
+                            </div>
+                            
+                            <div class="mt-3">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p class="mb-1">Original Price: <span id="originalPriceDisplay">0.00</span></p>
+                                        <p class="mb-1">After VAT: <span id="afterVatDisplay">0.00</span></p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p class="mb-1">After AIT: <span id="afterAitDisplay">0.00</span></p>
+                                        <p class="mb-1"><strong>Final Price: <span id="finalPriceDisplay">0.00</span></strong></p>
+                                    </div>
+                                </div>
+                                <input type="hidden" id="finalPrice" name="final_price" value="0">
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div class="mb-3">
-                        <label for="{{ form.wastage_amount.id_for_label }}" class="form-label">Wastage Amount (BDT)</label>
+                        <label for="{{ form.source_warehouse.id_for_label }}" class="form-label">Source Warehouse</label>
+                        {{ form.source_warehouse }}
+                        {% if form.source_warehouse.errors %}
+                        <div class="form-error">{{ form.source_warehouse.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.destination_warehouse.id_for_label }}" class="form-label">Destination Warehouse</label>
+                        {{ form.destination_warehouse }}
+                        {% if form.destination_warehouse.errors %}
+                        <div class="form-error">{{ form.destination_warehouse.errors.0 }}</div>
+                        {% endif %}
+            </div>
+            
+                    <div class="mb-3">
+                        <label for="{{ form.supplier.id_for_label }}" class="form-label">Supplier</label>
+                        {{ form.supplier }}
+                        {% if form.supplier.errors %}
+                        <div class="form-error">{{ form.supplier.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.client.id_for_label }}" class="form-label">Client</label>
+                        {{ form.client }}
+                        {% if form.client.errors %}
+                        <div class="form-error">{{ form.client.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.wastage_amount.id_for_label }}" class="form-label">Wastage Amount</label>
                         {{ form.wastage_amount }}
-                        <small class="form-text text-muted">Additional wastage cost in BDT</small>
                         {% if form.wastage_amount.errors %}
-                        <div class="text-danger">{{ form.wastage_amount.errors }}</div>
+                        <div class="form-error">{{ form.wastage_amount.errors.0 }}</div>
                         {% endif %}
-                    </div>
                 </div>
-                <div class="col-md-4">
-                    <div class="mb-3">
-                        <label for="{{ form.transaction_date.id_for_label }}" class="form-label">Transaction Date</label>
-                        {{ form.transaction_date }}
-                        {% if form.transaction_date.errors %}
-                        <div class="text-danger">{{ form.transaction_date.errors }}</div>
-                        {% endif %}
-                    </div>
-                </div>
-                <div class="col-md-4">
+                    
                     <div class="mb-3">
                         <label for="{{ form.reference_number.id_for_label }}" class="form-label">Reference Number</label>
                         {{ form.reference_number }}
                         {% if form.reference_number.errors %}
-                        <div class="text-danger">{{ form.reference_number.errors }}</div>
+                        <div class="form-error">{{ form.reference_number.errors.0 }}</div>
                         {% endif %}
-                    </div>
-                </div>
             </div>
             
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label for="{{ form.supplier.id_for_label }}" class="form-label">Supplier</label>
-                        {{ form.supplier }}
-                        <small class="form-text text-muted">Required for Stock In transactions</small>
-                        {% if form.supplier.errors %}
-                        <div class="text-danger">{{ form.supplier.errors }}</div>
-                        {% endif %}
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label for="{{ form.client.id_for_label }}" class="form-label">Client</label>
-                        {{ form.client }}
-                        <small class="form-text text-muted">Required for Stock Out transactions</small>
-                        {% if form.client.errors %}
-                        <div class="text-danger">{{ form.client.errors }}</div>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-            
-            <div class="row mb-3">
-                <div class="col-md-12">
                     <div class="mb-3">
                         <label for="{{ form.notes.id_for_label }}" class="form-label">Notes</label>
                         {{ form.notes }}
                         {% if form.notes.errors %}
-                        <div class="text-danger">{{ form.notes.errors }}</div>
+                        <div class="form-error">{{ form.notes.errors.0 }}</div>
                         {% endif %}
                     </div>
+            
+                    <!-- Payment Options Section -->
+                    <div id="paymentOptionsSection" class="mb-4 border rounded p-3 bg-light">
+                        <h5 class="mb-3">Payment Information</h5>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.payment_status.id_for_label }}" class="form-label">Payment Status</label>
+                            {{ form.payment_status }}
+                            {% if form.payment_status.errors %}
+                                <div class="form-error">{{ form.payment_status.errors.0 }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">Select the payment status for this transaction.</small>
+                        </div>
+                        
+                        <div id="paymentDueDateField" class="mb-3">
+                            <label for="{{ form.payment_due_date.id_for_label }}" class="form-label">Payment Due Date</label>
+                            {{ form.payment_due_date }}
+                            {% if form.payment_due_date.errors %}
+                                <div class="form-error">{{ form.payment_due_date.errors.0 }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">Required for due, partial, or credit payments.</small>
+                        </div>
+                        
+                        <div id="amountPaidField" class="mb-3">
+                            <label for="{{ form.amount_paid.id_for_label }}" class="form-label">Amount Paid</label>
+                            {{ form.amount_paid }}
+                            {% if form.amount_paid.errors %}
+                                <div class="form-error">{{ form.amount_paid.errors.0 }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">Required for partial payments.</small>
+                        </div>
+                        
+                        <div class="alert alert-info mt-2">
+                            <p class="mb-1"><strong>Payment Status Information:</strong></p>
+                            <p class="mb-1">• <strong>Paid:</strong> Full payment received at time of transaction</p>
+                            <p class="mb-1">• <strong>Due:</strong> Full payment pending, with a future due date</p>
+                            <p class="mb-1">• <strong>Partially Paid:</strong> Some payment received, with balance due</p>
+                            <p class="mb-0">• <strong>Credit:</strong> Payment arrangement with special terms</p>
                 </div>
             </div>
             
             <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                 <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-save"></i> Save Transaction
+                            <i class="fas fa-save"></i> Save
                 </button>
             </div>
         </form>
     </div>
+    </div>
 </div>
 
-<!-- Profit/Loss Calculator Card -->
-<div class="card mt-4" id="profitLossCard">
-    <div class="card-header bg-light">
-        <h5 class="mb-0">Transaction Summary</h5>
+    <div class="col-md-4">
+        <!-- Product Information Card -->
+        <div class="card mb-4" id="productInfoCard" style="display: none;">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">Product Information</h5>
     </div>
     <div class="card-body">
-        <div class="row">
-            <div class="col-md-6">
-                <h6 class="border-bottom pb-2 mb-3">Product Information</h6>
-                <table class="table table-sm">
-                    <tr>
-                        <th>Product Name:</th>
-                        <td id="summaryProduct">-</td>
-                    </tr>
-                    <tr>
-                        <th>SKU:</th>
-                        <td id="summarySKU">-</td>
-                    </tr>
-                    <tr>
-                        <th>Category:</th>
-                        <td id="summaryCategory">-</td>
-                    </tr>
-                    <tr>
-                        <th>Supplier:</th>
-                        <td id="summarySupplier">-</td>
-                    </tr>
-                    <tr>
-                        <th>Current Stock:</th>
-                        <td id="summaryCurrentStock">-</td>
-                    </tr>
-                    <tr>
-                        <th>UOM:</th>
-                        <td id="summaryUOM">-</td>
-                    </tr>
-                    <tr>
-                        <th>Description:</th>
-                        <td id="summaryDescription">-</td>
-                    </tr>
-                </table>
+                <div id="productInfo">
+                    <h5 id="productName" class="mb-3">-</h5>
+                    <p><strong>SKU:</strong> <span id="productSku">-</span></p>
+                    <p><strong>Category:</strong> <span id="productCategory">-</span></p>
+                    <p><strong>Current Stock:</strong> <span id="productQuantity">-</span> <span id="productUom">-</span></p>
+                    <p><strong>Buying Price:</strong> <span id="productBuyingPrice">-</span></p>
+                    <p><strong>Selling Price:</strong> <span id="productSellingPrice">-</span></p>
+                    <p><strong>Profit Margin:</strong> <span id="productProfitMargin">-</span>%</p>
+                    <p><strong>Warehouse:</strong> <span id="productWarehouse">-</span></p>
+                </div>
             </div>
-            <div class="col-md-6">
-                <h6 class="border-bottom pb-2 mb-3">Transaction Details</h6>
-                <table class="table table-sm">
-                    <tr>
-                        <th>Transaction Type:</th>
-                        <td id="summaryType">-</td>
+        </div>
+
+        <!-- Transaction Details Card -->
+        <div class="card mb-4" id="transactionDetailsCard" style="display: none;">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0">Recent Transactions</h5>
+            </div>
+            <div class="card-body">
+                <div id="transactionDetails">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-striped">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Date</th>
+                                    <th>Type</th>
+                                    <th>Qty</th>
+                                    <th>Status</th>
                     </tr>
+                            </thead>
+                            <tbody id="transactionsList">
                     <tr>
-                        <th>Quantity:</th>
-                        <td id="summaryQuantity">-</td>
+                                    <td colspan="5" class="text-center">Select a product to view transactions</td>
                     </tr>
-                    <tr>
-                        <th>Total Cost:</th>
-                        <td id="summaryCost">-</td>
-                    </tr>
-                    <tr>
-                        <th>Total Revenue:</th>
-                        <td id="summaryRevenue">-</td>
-                    </tr>
-                    <tr>
-                        <th>Wastage:</th>
-                        <td id="summaryWastage">-</td>
-                    </tr>
-                    <tr>
-                        <th>Profit/Loss:</th>
-                        <td id="summaryProfitLoss">-</td>
-                    </tr>
+                            </tbody>
                 </table>
+                    </div>
+                    <div class="text-center mt-2">
+                        <small class="text-muted">Showing recent transactions for this product</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transaction Preview Card -->
+        <div class="card mb-4" id="transactionPreviewCard">
+            <div class="card-header bg-success text-white">
+                <h5 class="card-title mb-0">Transaction Preview</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info mb-3">
+                    <i class="fas fa-info-circle"></i> This preview shows the calculated values for the current transaction.
+                </div>
+                <div id="transactionPreview">
+                    <div class="row">
+                        <div class="col-6">
+                            <p><strong>Quantity:</strong> <span id="previewQuantity">0</span></p>
+                            <p><strong>Unit Price:</strong> <span id="previewUnitPrice">0.00</span></p>
+                            <p><strong>Total Price:</strong> <span id="previewTotalPrice" class="text-success fw-bold">0.00</span></p>
+                        </div>
+                        <div class="col-6">
+                            <p><strong>Transaction Type:</strong> <span id="previewType">-</span></p>
+                            <p><strong>Payment Status:</strong> <span id="previewPaymentStatus">-</span></p>
+                            <p><strong>Warehouse:</strong> <span id="previewWarehouse">-</span></p>
+                        </div>
+                    </div>
+                    <div class="mt-3" id="taxPreviewSection" style="display: none;">
+                        <h6 class="border-bottom pb-2">Tax Calculations</h6>
+                        <div class="row">
+                            <div class="col-6">
+                                <p><strong>VAT Deduction:</strong> <span id="previewVatDeduction">0.00</span></p>
+                                <p><strong>AIT Deduction:</strong> <span id="previewAitDeduction">0.00</span></p>
+                            </div>
+                            <div class="col-6">
+                                <p><strong>After Taxes:</strong> <span id="previewAfterTaxes">0.00</span></p>
+                                <p><strong>Net Profit:</strong> <span id="previewProfit">0.00</span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transaction Types Card -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Transaction Types</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Stock In:</strong> Add new inventory to the warehouse.</p>
+                <p><strong>Stock Out:</strong> Remove inventory for sales or other purposes.</p>
+                <p><strong>Wastage:</strong> Record damaged or expired inventory.</p>
+                <p><strong>Return:</strong> Record returned items from customers.</p>
+                <p><strong>Warehouse Transfer:</strong> Move inventory between warehouses.</p>
+                
+                <div class="alert alert-info mt-3">
+                    <i class="fas fa-info-circle"></i> The form will update automatically based on the transaction type selected.
+                </div>
             </div>
         </div>
     </div>
@@ -228,166 +351,178 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="{% static 'js/stock.js' %}"></script>
 <script>
-    // Store product data for quick access
-    let productData = {};
-    
     document.addEventListener('DOMContentLoaded', function() {
-        const productSelect = document.getElementById('{{ form.product.id_for_label }}');
-        const transactionTypeSelect = document.getElementById('{{ form.transaction_type.id_for_label }}');
-        const quantityInput = document.getElementById('{{ form.quantity.id_for_label }}');
-        const buyingPriceInput = document.getElementById('{{ form.buying_price.id_for_label }}');
-        const sellingPriceInput = document.getElementById('{{ form.selling_price.id_for_label }}');
-        const wastageAmountInput = document.getElementById('{{ form.wastage_amount.id_for_label }}');
-        const supplierField = document.getElementById('{{ form.supplier.id_for_label }}').parentNode.parentNode;
-        const clientField = document.getElementById('{{ form.client.id_for_label }}').parentNode.parentNode;
+        // Initialize tax options section if transaction type is 'out'
+        const transactionType = document.getElementById('id_transaction_type').value;
+        if (transactionType === 'out') {
+            const taxOptionsSection = document.getElementById('taxOptionsSection');
+            if (taxOptionsSection) {
+                taxOptionsSection.style.display = 'block';
+            }
+        }
         
-        // Fetch product data via AJAX
-        fetch('{% url "products" %}?format=json')
-            .then(response => response.json())
-            .then(data => {
-                console.log("Product data loaded:", data);
-                data.forEach(product => {
-                    productData[product.id] = {
-                        name: product.name,
-                        sku: product.sku,
-                        buying_price: product.buying_price,
-                        selling_price: product.selling_price,
-                        uom: product.unit_of_measure,
-                        quantity: product.quantity,
-                        category: product.category_name || 'N/A',
-                        supplier: product.supplier_name || 'N/A',
-                        description: product.description || 'N/A'
-                    };
-                });
-                
-                // If a product is already selected (e.g., on form edit), update prices
-                if (productSelect.value) {
-                    console.log("Initial product selected:", productSelect.value);
-                    updateProductPrices();
+        // Handle product selection to display product info and transaction history
+        const productSelect = document.getElementById('id_product');
+        const productInfoCard = document.getElementById('productInfoCard');
+        const transactionDetailsCard = document.getElementById('transactionDetailsCard');
+        
+        if (productSelect) {
+            productSelect.addEventListener('change', function() {
+                if (this.value) {
+                    fetchProductDetails(this.value);
+                    fetchTransactionDetails(this.value);
+                } else {
+                    productInfoCard.style.display = 'none';
+                    transactionDetailsCard.style.display = 'none';
                 }
-            })
-            .catch(error => console.error('Error fetching product data:', error));
-        
-        function updateFields() {
-            const transactionType = transactionTypeSelect.value;
+            });
             
-            // Show/hide supplier and client fields based on transaction type
-            if (transactionType === 'in' || transactionType === 'return') {
-                supplierField.style.display = 'block';
-                clientField.style.display = 'none';
-            } else if (transactionType === 'out') {
-                supplierField.style.display = 'none';
-                clientField.style.display = 'block';
-            } else if (transactionType === 'wastage') {
-                supplierField.style.display = 'none';
-                clientField.style.display = 'none';
-            } else {
-                supplierField.style.display = 'block';
-                clientField.style.display = 'block';
-            }
-            
-            updateSummary();
-        }
-        
-        function updateProductPrices() {
-            const productId = productSelect.value;
-            console.log("Updating prices for product ID:", productId);
-            
-            if (productId && productData[productId]) {
-                console.log("Setting prices from product data:", productData[productId]);
-                buyingPriceInput.value = productData[productId].buying_price;
-                sellingPriceInput.value = productData[productId].selling_price;
-                
-                updateSummary();
-            } else {
-                console.log("Product data not found for ID:", productId);
+            // Check if a product is already selected on page load
+            if (productSelect.value) {
+                fetchProductDetails(productSelect.value);
+                fetchTransactionDetails(productSelect.value);
             }
         }
         
-        function updateSummary() {
-            const productId = productSelect.value;
-            const transactionType = transactionTypeSelect.value;
-            const quantity = parseFloat(quantityInput.value) || 0;
-            const buyingPrice = parseFloat(buyingPriceInput.value) || 0;
-            const sellingPrice = parseFloat(sellingPriceInput.value) || 0;
-            const wastageAmount = parseFloat(wastageAmountInput.value) || 0;
-            
-            // Update summary fields
-            if (productId && productData[productId]) {
-                const product = productData[productId];
-                document.getElementById('summaryProduct').textContent = product.name;
-                document.getElementById('summaryType').textContent = transactionType ? transactionTypeSelect.options[transactionTypeSelect.selectedIndex].text : '-';
-                document.getElementById('summaryQuantity').textContent = quantity || '-';
-                document.getElementById('summaryUOM').textContent = product.uom;
-                
-                // Add additional product info
-                document.getElementById('summarySKU').textContent = product.sku;
-                document.getElementById('summaryCategory').textContent = product.category;
-                document.getElementById('summarySupplier').textContent = product.supplier;
-                document.getElementById('summaryCurrentStock').textContent = product.quantity;
-                document.getElementById('summaryDescription').textContent = product.description;
-            } else {
-                document.getElementById('summaryProduct').textContent = '-';
-                document.getElementById('summaryType').textContent = transactionType ? transactionTypeSelect.options[transactionTypeSelect.selectedIndex].text : '-';
-                document.getElementById('summaryQuantity').textContent = quantity || '-';
-                document.getElementById('summaryUOM').textContent = '-';
-                
-                // Clear additional product info
-                document.getElementById('summarySKU').textContent = '-';
-                document.getElementById('summaryCategory').textContent = '-';
-                document.getElementById('summarySupplier').textContent = '-';
-                document.getElementById('summaryCurrentStock').textContent = '-';
-                document.getElementById('summaryDescription').textContent = '-';
-            }
-            
-            let cost = 0;
-            let revenue = 0;
-            let profitLoss = 0;
-            let unitPrice = 0;
-            
-            if (transactionType === 'out') {
-                unitPrice = sellingPrice;
-                cost = quantity * buyingPrice;
-                revenue = quantity * unitPrice;
-                profitLoss = revenue - cost - wastageAmount;
-                
-                document.getElementById('summaryCost').textContent = cost.toFixed(2) + ' BDT';
-                document.getElementById('summaryRevenue').textContent = revenue.toFixed(2) + ' BDT';
-                document.getElementById('summaryWastage').textContent = wastageAmount.toFixed(2) + ' BDT';
-                document.getElementById('summaryProfitLoss').textContent = profitLoss.toFixed(2) + ' BDT';
-                document.getElementById('summaryProfitLoss').className = profitLoss >= 0 ? 'text-success' : 'text-danger';
-            } else if (transactionType === 'wastage') {
-                unitPrice = buyingPrice;
-                cost = quantity * buyingPrice;
-                profitLoss = -(cost + wastageAmount);
-                
-                document.getElementById('summaryCost').textContent = cost.toFixed(2) + ' BDT';
-                document.getElementById('summaryRevenue').textContent = '0.00 BDT';
-                document.getElementById('summaryWastage').textContent = wastageAmount.toFixed(2) + ' BDT';
-                document.getElementById('summaryProfitLoss').textContent = profitLoss.toFixed(2) + ' BDT';
-                document.getElementById('summaryProfitLoss').className = 'text-danger';
-            } else {
-                document.getElementById('summaryCost').textContent = '-';
-                document.getElementById('summaryRevenue').textContent = '-';
-                document.getElementById('summaryWastage').textContent = wastageAmount.toFixed(2) + ' BDT';
-                document.getElementById('summaryProfitLoss').textContent = '-';
-            }
+        // Function to fetch product details
+        function fetchProductDetails(productId) {
+            fetch(`/imstransform/products/?format=json&search=${productId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.length > 0) {
+                        const product = data[0];
+                        
+                        // Update product info card
+                        document.getElementById('productName').textContent = product.name;
+                        document.getElementById('productSku').textContent = product.sku;
+                        document.getElementById('productCategory').textContent = product.category_name || '-';
+                        document.getElementById('productQuantity').textContent = product.quantity;
+                        document.getElementById('productUom').textContent = product.unit_of_measure;
+                        document.getElementById('productBuyingPrice').textContent = product.buying_price;
+                        document.getElementById('productSellingPrice').textContent = product.selling_price;
+                        
+                        // Calculate profit margin
+                        const buyingPrice = parseFloat(product.buying_price);
+                        const sellingPrice = parseFloat(product.selling_price);
+                        let profitMargin = 0;
+                        
+                        if (buyingPrice > 0) {
+                            profitMargin = ((sellingPrice - buyingPrice) / buyingPrice) * 100;
+                        }
+                        
+                        document.getElementById('productProfitMargin').textContent = profitMargin.toFixed(2);
+                        document.getElementById('productWarehouse').textContent = product.warehouse_name || '-';
+                        
+                        // Show product info card
+                        productInfoCard.style.display = 'block';
+                        
+                        // Update form fields with product values
+                        document.getElementById('id_buying_price').value = product.buying_price;
+                        document.getElementById('id_selling_price').value = product.selling_price;
+                        
+                        // If product has a warehouse, set source warehouse
+                        if (product.warehouse_id) {
+                            const sourceWarehouseSelect = document.getElementById('id_source_warehouse');
+                            if (sourceWarehouseSelect) {
+                                sourceWarehouseSelect.value = product.warehouse_id;
+                            }
+                        }
+                        
+                        // Calculate taxes if applicable
+                        if (typeof calculateTaxes === 'function') {
+                            calculateTaxes();
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching product details:', error);
+                    productInfoCard.style.display = 'none';
+                });
         }
         
-        // Add event listeners
-        productSelect.addEventListener('change', function() {
-            console.log("Product changed to:", this.value);
-            updateProductPrices();
-        });
-        transactionTypeSelect.addEventListener('change', updateFields);
-        quantityInput.addEventListener('input', updateSummary);
-        buyingPriceInput.addEventListener('input', updateSummary);
-        sellingPriceInput.addEventListener('input', updateSummary);
-        wastageAmountInput.addEventListener('input', updateSummary);
-        
-        // Initialize fields
-        updateFields();
+        // Function to fetch transaction details
+        function fetchTransactionDetails(productId) {
+            const transactionsList = document.getElementById('transactionsList');
+            
+            // Show loading indicator
+            transactionsList.innerHTML = '<tr><td colspan="5" class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading transactions...</td></tr>';
+            transactionDetailsCard.style.display = 'block';
+            
+            fetch(`/imstransform/stock/?format=json&product_id=${productId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Clear the transactions list
+                    transactionsList.innerHTML = '';
+                    
+                    if (data && data.length > 0) {
+                        // Sort transactions by date (newest first)
+                        data.sort((a, b) => new Date(b.transaction_date) - new Date(a.transaction_date));
+                        
+                        // Take only the 5 most recent transactions
+                        const recentTransactions = data.slice(0, 5);
+                        
+                        // Add each transaction to the list
+                        recentTransactions.forEach(transaction => {
+                            const row = document.createElement('tr');
+                            
+                            // Format the date
+                            const transactionDate = new Date(transaction.transaction_date);
+                            const formattedDate = transactionDate.toLocaleDateString() + ' ' + 
+                                                transactionDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                            
+                            // Determine the badge class based on transaction type
+                            let typeClass = 'bg-secondary';
+                            if (transaction.transaction_type === 'in') typeClass = 'bg-primary';
+                            if (transaction.transaction_type === 'out') typeClass = 'bg-info';
+                            if (transaction.transaction_type === 'wastage') typeClass = 'bg-danger';
+                            if (transaction.transaction_type === 'return') typeClass = 'bg-warning';
+                            if (transaction.transaction_type === 'transfer') typeClass = 'bg-success';
+                            
+                            // Determine the payment status badge class
+                            let statusClass = 'bg-secondary';
+                            if (transaction.payment_status === 'paid') statusClass = 'bg-success';
+                            if (transaction.payment_status === 'due') statusClass = 'bg-danger';
+                            if (transaction.payment_status === 'partial') statusClass = 'bg-warning';
+                            if (transaction.payment_status === 'credit') statusClass = 'bg-info';
+                            
+                            // Get transaction type display name
+                            let typeDisplay = transaction.transaction_type.charAt(0).toUpperCase() + transaction.transaction_type.slice(1);
+                            
+                            // Get payment status display name
+                            let statusDisplay = 'N/A';
+                            if (transaction.payment_status === 'paid') statusDisplay = 'Paid';
+                            if (transaction.payment_status === 'due') statusDisplay = 'Due';
+                            if (transaction.payment_status === 'partial') statusDisplay = 'Partial';
+                            if (transaction.payment_status === 'credit') statusDisplay = 'Credit';
+                            
+                            // Create the row content
+                            row.innerHTML = `
+                                <td>${transaction.id}</td>
+                                <td>${formattedDate}</td>
+                                <td><span class="badge ${typeClass}">${typeDisplay}</span></td>
+                                <td>${transaction.quantity}</td>
+                                <td><span class="badge ${statusClass}">${statusDisplay}</span></td>
+                            `;
+                            
+                            transactionsList.appendChild(row);
+                        });
+            } else {
+                        // No transactions found
+                        transactionsList.innerHTML = '<tr><td colspan="5" class="text-center">No transactions found for this product</td></tr>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching transaction data:', error);
+                    transactionsList.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Error loading transactions</td></tr>';
+                });
+        }
     });
 </script>
 {% endblock %} 
