@@ -34,7 +34,7 @@
             <i class="fas fa-filter"></i> Advanced Filters
         </button>
     </div>
-    <div class="collapse" id="filterCollapse">
+    <div class="collapse" id="filterCollapse" data-show-filters="{% if applied_filters %}true{% else %}false{% endif %}">
         <div class="card-body">
             <form method="get" action="{% url 'reports' %}" class="row g-3">
                 <input type="hidden" name="type" value="{{ report_type }}">
@@ -242,19 +242,24 @@
                         <th>Date</th>
                         <th>Product</th>
                         <th>Quantity</th>
-                        <th>Unit Price</th>
+                        <th>UOM</th>
+                        <th>Buying Price</th>
+                        <th>Selling Price</th>
+                        <th>VAT (%)</th>
+                        <th>AIT (%)</th>
+                        <th>Final Price</th>
                         <th>Total Price</th>
+                        <th>Profit/Loss</th>
                         <th>Client</th>
                         <th>Payment Status</th>
                         <th>Reference</th>
-                        <th>Notes</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% if grouped_data %}
                         {% for group in grouped_data %}
                         <tr class="table-secondary">
-                            <td colspan="10"><strong>{{ group.name }}</strong></td>
+                            <td colspan="15"><strong>{{ group.name }}</strong></td>
                         </tr>
                         {% for sale in group.transactions %}
                         <tr>
@@ -262,8 +267,26 @@
                             <td>{{ sale.transaction_date|date:"Y-m-d H:i" }}</td>
                             <td>{{ sale.product.name }}</td>
                             <td>{{ sale.quantity }}</td>
-                            <td>{{ sale.unit_price }}</td>
+                            <td>{{ sale.product.unit_of_measure }}</td>
+                            <td>{{ sale.buying_price }}</td>
+                            <td>{{ sale.selling_price }}</td>
+                            <td>
+                                {% if not sale.apply_taxes %}
+                                -
+                                {% else %}
+                                {{ sale.vat_rate|default:"0" }}
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if not sale.apply_taxes %}
+                                -
+                                {% else %}
+                                {{ sale.ait_rate|default:"0" }}
+                                {% endif %}
+                            </td>
+                            <td>{% if sale.apply_taxes and sale.final_price %}{{ sale.final_price }}{% else %}{{ sale.selling_price }}{% endif %}</td>
                             <td>{{ sale.total_price }}</td>
+                            <td>{{ sale.profit_loss }}</td>
                             <td>{% if sale.client %}{{ sale.client.name }}{% else %}-{% endif %}</td>
                             <td>
                                 {% if sale.payment_status == 'paid' %}
@@ -279,12 +302,12 @@
                                 {% endif %}
                             </td>
                             <td>{{ sale.reference_number|default:"-" }}</td>
-                            <td>{{ sale.notes|truncatechars:30|default:"-" }}</td>
                         </tr>
                         {% endfor %}
                         <tr class="table-light">
-                            <td colspan="9" class="text-end"><em>Subtotal:</em></td>
+                            <td colspan="10" class="text-end"><em>Subtotal:</em></td>
                             <td><em>{{ group.subtotal|floatformat:2 }}</em></td>
+                            <td colspan="4"></td>
                         </tr>
                         {% endfor %}
                     {% else %}
@@ -294,8 +317,26 @@
                             <td>{{ sale.transaction_date|date:"Y-m-d H:i" }}</td>
                             <td>{{ sale.product.name }}</td>
                             <td>{{ sale.quantity }}</td>
-                            <td>{{ sale.unit_price }}</td>
+                            <td>{{ sale.product.unit_of_measure }}</td>
+                            <td>{{ sale.buying_price }}</td>
+                            <td>{{ sale.selling_price }}</td>
+                            <td>
+                                {% if not sale.apply_taxes %}
+                                -
+                                {% else %}
+                                {{ sale.vat_rate|default:"0" }}
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if not sale.apply_taxes %}
+                                -
+                                {% else %}
+                                {{ sale.ait_rate|default:"0" }}
+                                {% endif %}
+                            </td>
+                            <td>{% if sale.apply_taxes and sale.final_price %}{{ sale.final_price }}{% else %}{{ sale.selling_price }}{% endif %}</td>
                             <td>{{ sale.total_price }}</td>
+                            <td>{{ sale.profit_loss }}</td>
                             <td>{% if sale.client %}{{ sale.client.name }}{% else %}-{% endif %}</td>
                             <td>
                                 {% if sale.payment_status == 'paid' %}
@@ -311,18 +352,17 @@
                                 {% endif %}
                             </td>
                             <td>{{ sale.reference_number|default:"-" }}</td>
-                            <td>{{ sale.notes|truncatechars:30|default:"-" }}</td>
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="10" class="text-center">No sales data available for the selected period.</td>
+                            <td colspan="15" class="text-center">No sales data available for the selected period.</td>
                         </tr>
                         {% endfor %}
                     {% endif %}
                 </tbody>
                 <tfoot>
                     <tr class="table-dark">
-                        <td colspan="5" class="text-end"><strong>Total Sales:</strong></td>
+                        <td colspan="10" class="text-end"><strong>Total Sales:</strong></td>
                         <td><strong>{{ total_sales|floatformat:2 }}</strong></td>
                         <td colspan="4"></td>
                     </tr>
@@ -387,8 +427,20 @@
                             <td>{{ transaction.quantity }}</td>
                             <td>{{ transaction.product.unit_of_measure }}</td>
                             <td>{{ transaction.buying_price }}</td>
-                            <td>{{ transaction.vat_rate|default:0 }}</td>
-                            <td>{{ transaction.ait_rate|default:0 }}</td>
+                            <td>
+                                {% if not transaction.apply_taxes %}
+                                -
+                                {% else %}
+                                {{ transaction.vat_rate|default:"0" }}
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if not transaction.apply_taxes %}
+                                -
+                                {% else %}
+                                {{ transaction.ait_rate|default:"0" }}
+                                {% endif %}
+                            </td>
                             <td>{% if transaction.apply_taxes and transaction.final_price %}{{ transaction.final_price }}{% else %}{{ transaction.buying_price }}{% endif %}</td>
                             <td>{{ transaction.total_price }}</td>
                             <td>{% if transaction.product.supplier %}{{ transaction.product.supplier.name }}{% else %}-{% endif %}</td>
@@ -410,8 +462,20 @@
                             <td>{{ transaction.quantity }}</td>
                             <td>{{ transaction.product.unit_of_measure }}</td>
                             <td>{{ transaction.buying_price }}</td>
-                            <td>{{ transaction.vat_rate|default:"0" }}</td>
-                            <td>{{ transaction.ait_rate|default:"0" }}</td>
+                            <td>
+                                {% if not transaction.apply_taxes %}
+                                -
+                                {% else %}
+                                {{ transaction.vat_rate|default:"0" }}
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if not transaction.apply_taxes %}
+                                -
+                                {% else %}
+                                {{ transaction.ait_rate|default:"0" }}
+                                {% endif %}
+                            </td>
                             <td>{% if transaction.apply_taxes and transaction.final_price %}{{ transaction.final_price }}{% else %}{{ transaction.buying_price }}{% endif %}</td>
                             <td>{{ transaction.total_price }}</td>
                             <td>{% if transaction.product.supplier %}{{ transaction.product.supplier.name }}{% else %}-{% endif %}</td>
@@ -927,14 +991,11 @@ Phone: (123) 456-7890 | Email: info@qbitx-ims.com</textarea>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Show filter collapse if any filters are applied
-        {% if applied_filters %}
         var filterCollapse = document.getElementById('filterCollapse');
-        if (filterCollapse) {
-            var bsCollapse = new bootstrap.Collapse(filterCollapse, {
-                toggle: true
-            });
+        if (filterCollapse && filterCollapse.dataset.showFilters === 'true') {
+            var bsCollapse = new bootstrap.Collapse(filterCollapse);
+            bsCollapse.show();
         }
-        {% endif %}
     });
 </script>
 {% endblock %} 

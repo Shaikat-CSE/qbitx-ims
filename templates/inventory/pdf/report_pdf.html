@@ -280,8 +280,20 @@
                     <td class="text-right">{{ transaction.quantity }}</td>
                     <td>{{ transaction.product.unit_of_measure }}</td>
                     <td class="text-right">{{ transaction.buying_price }}</td>
-                    <td class="text-right">{{ transaction.vat_rate|default:0 }}</td>
-                    <td class="text-right">{{ transaction.ait_rate|default:0 }}</td>
+                    <td class="text-right">
+                        {% if not transaction.apply_taxes %}
+                        -
+                        {% else %}
+                        {{ transaction.vat_rate|default:0 }}
+                        {% endif %}
+                    </td>
+                    <td class="text-right">
+                        {% if not transaction.apply_taxes %}
+                        -
+                        {% else %}
+                        {{ transaction.ait_rate|default:0 }}
+                        {% endif %}
+                    </td>
                     <td class="text-right">{% if transaction.apply_taxes and transaction.final_price %}{{ transaction.final_price }}{% else %}{{ transaction.buying_price }}{% endif %}</td>
                     <td class="text-right">{{ transaction.total_price }}</td>
                     <td>{% if transaction.product.supplier %}{{ transaction.product.supplier.name }}{% else %}-{% endif %}</td>
@@ -302,8 +314,20 @@
                     <td class="text-right">{{ transaction.quantity }}</td>
                     <td>{{ transaction.product.unit_of_measure }}</td>
                     <td class="text-right">{{ transaction.buying_price }}</td>
-                    <td class="text-right">{{ transaction.vat_rate|default:0 }}</td>
-                    <td class="text-right">{{ transaction.ait_rate|default:0 }}</td>
+                    <td class="text-right">
+                        {% if not transaction.apply_taxes %}
+                        -
+                        {% else %}
+                        {{ transaction.vat_rate|default:0 }}
+                        {% endif %}
+                    </td>
+                    <td class="text-right">
+                        {% if not transaction.apply_taxes %}
+                        -
+                        {% else %}
+                        {{ transaction.ait_rate|default:0 }}
+                        {% endif %}
+                    </td>
                     <td class="text-right">{% if transaction.apply_taxes and transaction.final_price %}{{ transaction.final_price }}{% else %}{{ transaction.buying_price }}{% endif %}</td>
                     <td class="text-right">{{ transaction.total_price }}</td>
                     <td>{% if transaction.product.supplier %}{{ transaction.product.supplier.name }}{% else %}-{% endif %}</td>

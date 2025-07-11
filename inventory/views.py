@@ -2484,3 +2484,114 @@ def get_transaction_details(request, transaction_id):
         return JsonResponse(data)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=404)
+
+@login_required
+def category_create_ajax(request):
+    """Create a new category via AJAX"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            name = data.get('name')
+            icon = data.get('icon')
+            
+            if not name:
+                return JsonResponse({'success': False, 'error': 'Name is required'})
+            
+            category = Category.objects.create(
+                name=name,
+                icon=icon
+            )
+            
+            return JsonResponse({
+                'success': True,
+                'category': {
+                    'id': category.id,
+                    'name': category.name
+                }
+            })
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+    
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+@login_required
+def supplier_create_ajax(request):
+    """Create a new supplier via AJAX"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            name = data.get('name')
+            contact_person = data.get('contact_person')
+            email = data.get('email')
+            phone = data.get('phone')
+            address = data.get('address')
+            city = data.get('city')
+            country = data.get('country')
+            notes = data.get('notes')
+            
+            if not name:
+                return JsonResponse({'success': False, 'error': 'Name is required'})
+            
+            supplier = Supplier.objects.create(
+                name=name,
+                contact_person=contact_person,
+                email=email,
+                phone=phone,
+                address=address,
+                city=city,
+                country=country,
+                notes=notes
+            )
+            
+            return JsonResponse({
+                'success': True,
+                'supplier': {
+                    'id': supplier.id,
+                    'name': supplier.name
+                }
+            })
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+    
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+@login_required
+def client_create_ajax(request):
+    """Create a new client via AJAX"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            name = data.get('name')
+            contact_person = data.get('contact_person')
+            email = data.get('email')
+            phone = data.get('phone')
+            address = data.get('address')
+            city = data.get('city')
+            country = data.get('country')
+            notes = data.get('notes')
+            
+            if not name:
+                return JsonResponse({'success': False, 'error': 'Name is required'})
+            
+            client = Client.objects.create(
+                name=name,
+                contact_person=contact_person,
+                email=email,
+                phone=phone,
+                address=address,
+                city=city,
+                country=country,
+                notes=notes
+            )
+            
+            return JsonResponse({
+                'success': True,
+                'client': {
+                    'id': client.id,
+                    'name': client.name
+                }
+            })
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+    
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})

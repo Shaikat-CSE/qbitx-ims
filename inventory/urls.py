@@ -11,13 +11,18 @@ urlpatterns = [
     
     path('suppliers/', views.suppliers, name='suppliers'),
     path('suppliers/create/', views.supplier_create, name='supplier_create'),
+    path('suppliers/create/ajax/', views.supplier_create_ajax, name='supplier_create_ajax'),
     path('suppliers/<int:pk>/edit/', views.supplier_edit, name='supplier_edit'),
     path('suppliers/<int:pk>/delete/', views.supplier_delete, name='supplier_delete'),
     
     path('clients/', views.clients, name='clients'),
     path('clients/create/', views.client_create, name='client_create'),
+    path('clients/create/ajax/', views.client_create_ajax, name='client_create_ajax'),
     path('clients/<int:pk>/edit/', views.client_edit, name='client_edit'),
     path('clients/<int:pk>/delete/', views.client_delete, name='client_delete'),
+    
+    # Category URLs
+    path('categories/create/ajax/', views.category_create_ajax, name='category_create_ajax'),
     
     # Warehouse URLs
     path('warehouses/', views.warehouses, name='warehouses'),

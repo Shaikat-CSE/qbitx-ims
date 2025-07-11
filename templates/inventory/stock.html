@@ -125,14 +125,14 @@
                         <td>{{ transaction.buying_price }} BDT</td>
                         <td>{{ transaction.selling_price }} BDT</td>
                         <td>
-                            {% if transaction.transaction_type == 'wastage' %}
+                            {% if transaction.transaction_type == 'wastage' or not transaction.apply_taxes %}
                             -
                             {% else %}
                             {{ transaction.vat_rate|default:0 }}
                             {% endif %}
                         </td>
                         <td>
-                            {% if transaction.transaction_type == 'wastage' %}
+                            {% if transaction.transaction_type == 'wastage' or not transaction.apply_taxes %}
                             -
                             {% else %}
                             {{ transaction.ait_rate|default:0 }}
