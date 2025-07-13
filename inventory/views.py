@@ -893,11 +893,13 @@ def reports(request):
             product.total_value = product.quantity * product.buying_price
         
         total_value = sum(p.total_value for p in products)
+        total_quantity = sum(p.quantity for p in products)
         
         context.update({
             'report_title': 'Inventory Value Report',
             'products': products,
             'total_value': total_value,
+            'total_quantity': total_quantity,
         })
     
     elif report_type == 'sales':
@@ -934,6 +936,7 @@ def reports(request):
         
         # Calculate total sales
         total_sales = sales.aggregate(total=Sum('total_price'))['total'] or 0
+        total_quantity_sold = sales.aggregate(total=Sum('quantity'))['total'] or 0
         
         # Group data if requested
         grouped_data = None
@@ -1046,6 +1049,7 @@ def reports(request):
             'report_title': 'Sales Report',
             'sales': sales,
             'total_sales': total_sales,
+            'total_quantity_sold': total_quantity_sold,
             'grouped_data': grouped_data,
         })
     
@@ -1081,6 +1085,7 @@ def reports(request):
         
         # Calculate total purchases
         total_purchases = purchases.aggregate(total=Sum('total_price'))['total'] or 0
+        total_quantity_purchased = purchases.aggregate(total=Sum('quantity'))['total'] or 0
         
         # Group data if requested
         grouped_data = None
@@ -1188,6 +1193,7 @@ def reports(request):
             'purchases': purchases,
             'grouped_data': grouped_data,
             'total_purchases': total_purchases,
+            'total_quantity_purchased': total_quantity_purchased,
             'start_date': start_date,
             'end_date': end_date,
             'applied_filters': ', '.join(applied_filters) if applied_filters else None,
@@ -1692,10 +1698,12 @@ def generate_report_pdf(request, report_type):
             product.total_value = product.quantity * product.buying_price
         
         total_value = sum(p.total_value for p in products)
+        total_quantity = sum(p.quantity for p in products)
         
         context.update({
             'products': products,
             'total_value': total_value,
+            'total_quantity': total_quantity,
         })
     
     elif report_type == 'sales':
@@ -1732,49 +1740,119 @@ def generate_report_pdf(request, report_type):
         
         # Calculate total sales
         total_sales = sales.aggregate(total=Sum('total_price'))['total'] or 0
+        total_quantity_sold = sales.aggregate(total=Sum('quantity'))['total'] or 0
         
         # Group data if requested
         grouped_data = None
         if group_by:
-            # This part should match the grouping logic in reports view
             grouped_data = []
             
-            # Process grouping based on the same logic as reports view
-            # First, group transactions by the group key
-            temp_groups = defaultdict(list)
-            for sale in sales:
-                if group_by == 'product':
-                    group_key = sale.product.name
-                elif group_by == 'category':
-                    group_key = sale.product.category.name if sale.product.category else 'Uncategorized'
-                elif group_by == 'supplier':
-                    group_key = sale.product.supplier.name if sale.product.supplier else 'No Supplier'
-                elif group_by == 'client':
-                    group_key = sale.client.name if sale.client else 'No Client'
-                elif group_by == 'date':
-                    group_key = sale.transaction_date.strftime('%Y-%m-%d')
-                else:
-                    group_key = 'Ungrouped'
+            if group_by == 'product':
+                # Group by product
+                products_dict = {}
+                for sale in sales:
+                    product_id = sale.product_id
+                    if product_id not in products_dict:
+                        products_dict[product_id] = {
+                            'name': sale.product.name,
+                            'transactions': [],
+                            'subtotal': 0
+                        }
+                    products_dict[product_id]['transactions'].append(sale)
+                    products_dict[product_id]['subtotal'] += sale.total_price
                 
-                temp_groups[group_key].append(sale)
+                # Convert dict to list and sort by name
+                for product_id, data in products_dict.items():
+                    grouped_data.append(data)
+                grouped_data.sort(key=lambda x: x['name'])
             
-            # Then calculate subtotals and create the final structure
-            for group_key, transactions in temp_groups.items():
-                subtotal = sum(t.total_price for t in transactions)
-                grouped_data.append({
-                    'name': group_key,
-                    'transactions': transactions,
-                    'subtotal': subtotal
-                })
+            elif group_by == 'category':
+                # Group by category
+                categories_dict = {}
+                for sale in sales:
+                    category_id = sale.product.category_id if sale.product.category else 0
+                    category_name = sale.product.category.name if sale.product.category else 'Uncategorized'
+                    
+                    if category_id not in categories_dict:
+                        categories_dict[category_id] = {
+                            'name': category_name,
+                            'transactions': [],
+                            'subtotal': 0
+                        }
+                    categories_dict[category_id]['transactions'].append(sale)
+                    categories_dict[category_id]['subtotal'] += sale.total_price
+                
+                # Convert dict to list and sort by name
+                for category_id, data in categories_dict.items():
+                    grouped_data.append(data)
+                grouped_data.sort(key=lambda x: x['name'])
             
-            # Sort the groups if needed
-            if sort_by in ('price_desc', 'price_asc'):
-                reverse = sort_by == 'price_desc'
-                grouped_data.sort(key=lambda x: x['subtotal'], reverse=reverse)
+            elif group_by == 'supplier':
+                # Group by supplier
+                suppliers_dict = {}
+                for sale in sales:
+                    supplier_id = sale.product.supplier_id if sale.product.supplier else 0
+                    supplier_name = sale.product.supplier.name if sale.product.supplier else 'No Supplier'
+                    
+                    if supplier_id not in suppliers_dict:
+                        suppliers_dict[supplier_id] = {
+                            'name': supplier_name,
+                            'transactions': [],
+                            'subtotal': 0
+                        }
+                    suppliers_dict[supplier_id]['transactions'].append(sale)
+                    suppliers_dict[supplier_id]['subtotal'] += sale.total_price
+                
+                # Convert dict to list and sort by name
+                for supplier_id, data in suppliers_dict.items():
+                    grouped_data.append(data)
+                grouped_data.sort(key=lambda x: x['name'])
+            
+            elif group_by == 'client':
+                # Group by client
+                clients_dict = {}
+                for sale in sales:
+                    client_id = sale.client_id if sale.client else 0
+                    client_name = sale.client.name if sale.client else 'No Client'
+                    
+                    if client_id not in clients_dict:
+                        clients_dict[client_id] = {
+                            'name': client_name,
+                            'transactions': [],
+                            'subtotal': 0
+                        }
+                    clients_dict[client_id]['transactions'].append(sale)
+                    clients_dict[client_id]['subtotal'] += sale.total_price
+                
+                # Convert dict to list and sort by name
+                for client_id, data in clients_dict.items():
+                    grouped_data.append(data)
+                grouped_data.sort(key=lambda x: x['name'])
+            
+            elif group_by == 'date':
+                # Group by date
+                dates_dict = {}
+                for sale in sales:
+                    date_str = sale.transaction_date.strftime('%Y-%m-%d')
+                    
+                    if date_str not in dates_dict:
+                        dates_dict[date_str] = {
+                            'name': sale.transaction_date.strftime('%B %d, %Y'),
+                            'transactions': [],
+                            'subtotal': 0
+                        }
+                    dates_dict[date_str]['transactions'].append(sale)
+                    dates_dict[date_str]['subtotal'] += sale.total_price
+                
+                # Convert dict to list and sort by date
+                for date_str, data in dates_dict.items():
+                    grouped_data.append(data)
+                grouped_data.sort(key=lambda x: x['name'], reverse=(sort_by == 'date_desc'))
         
         context.update({
             'sales': sales,
             'total_sales': total_sales,
+            'total_quantity_sold': total_quantity_sold,
             'grouped_data': grouped_data,
         })
     
@@ -1810,55 +1888,144 @@ def generate_report_pdf(request, report_type):
         
         # Calculate total purchases
         total_purchases = purchases.aggregate(total=Sum('total_price'))['total'] or 0
+        total_quantity_purchased = purchases.aggregate(total=Sum('quantity'))['total'] or 0
         
         # Group data if requested
         grouped_data = None
         if group_by:
-            # This part should match the grouping logic in reports view
             grouped_data = []
             
-            # Process grouping based on the same logic as reports view
-            temp_groups = defaultdict(list)
-            for transaction in purchases:
-                if group_by == 'product':
-                    group_key = transaction.product.name
-                elif group_by == 'category':
-                    group_key = transaction.product.category.name if transaction.product.category else 'Uncategorized'
-                elif group_by == 'supplier':
-                    group_key = transaction.product.supplier.name if transaction.product.supplier else 'No Supplier'
-                elif group_by == 'date':
-                    group_key = transaction.transaction_date.strftime('%Y-%m-%d')
-                else:
-                    group_key = 'Ungrouped'
+            if group_by == 'product':
+                # Group by product
+                products_dict = {}
+                for purchase in purchases:
+                    product_id = purchase.product_id
+                    if product_id not in products_dict:
+                        products_dict[product_id] = {
+                            'name': purchase.product.name,
+                            'transactions': [],
+                            'subtotal': 0
+                        }
+                    products_dict[product_id]['transactions'].append(purchase)
+                    products_dict[product_id]['subtotal'] += purchase.total_price
                 
-                temp_groups[group_key].append(transaction)
+                # Convert dict to list and sort by name
+                for product_id, data in products_dict.items():
+                    grouped_data.append(data)
+                grouped_data.sort(key=lambda x: x['name'])
             
-            # Then calculate subtotals and create the final structure
-            for group_key, transactions in temp_groups.items():
-                subtotal = sum(t.total_price for t in transactions)
-                grouped_data.append({
-                    'name': group_key,
-                    'transactions': transactions,
-                    'subtotal': subtotal
-                })
+            elif group_by == 'category':
+                # Group by category
+                categories_dict = {}
+                for purchase in purchases:
+                    category_id = purchase.product.category_id if purchase.product.category else 0
+                    category_name = purchase.product.category.name if purchase.product.category else 'Uncategorized'
+                    
+                    if category_id not in categories_dict:
+                        categories_dict[category_id] = {
+                            'name': category_name,
+                            'transactions': [],
+                            'subtotal': 0
+                        }
+                    categories_dict[category_id]['transactions'].append(purchase)
+                    categories_dict[category_id]['subtotal'] += purchase.total_price
+                
+                # Convert dict to list and sort by name
+                for category_id, data in categories_dict.items():
+                    grouped_data.append(data)
+                grouped_data.sort(key=lambda x: x['name'])
             
-            # Sort the groups if needed
-            if sort_by in ('price_desc', 'price_asc'):
-                reverse = sort_by == 'price_desc'
-                grouped_data.sort(key=lambda x: x['subtotal'], reverse=reverse)
+            elif group_by == 'supplier':
+                # Group by supplier
+                suppliers_dict = {}
+                for purchase in purchases:
+                    supplier_id = purchase.product.supplier_id if purchase.product.supplier else 0
+                    supplier_name = purchase.product.supplier.name if purchase.product.supplier else 'No Supplier'
+                    
+                    if supplier_id not in suppliers_dict:
+                        suppliers_dict[supplier_id] = {
+                            'name': supplier_name,
+                            'transactions': [],
+                            'subtotal': 0
+                        }
+                    suppliers_dict[supplier_id]['transactions'].append(purchase)
+                    suppliers_dict[supplier_id]['subtotal'] += purchase.total_price
+                
+                # Convert dict to list and sort by name
+                for supplier_id, data in suppliers_dict.items():
+                    grouped_data.append(data)
+                grouped_data.sort(key=lambda x: x['name'])
+            
+            elif group_by == 'date':
+                # Group by date
+                dates_dict = {}
+                for purchase in purchases:
+                    date_str = purchase.transaction_date.strftime('%Y-%m-%d')
+                    
+                    if date_str not in dates_dict:
+                        dates_dict[date_str] = {
+                            'name': purchase.transaction_date.strftime('%B %d, %Y'),
+                            'transactions': [],
+                            'subtotal': 0
+                        }
+                    dates_dict[date_str]['transactions'].append(purchase)
+                    dates_dict[date_str]['subtotal'] += purchase.total_price
+                
+                # Convert dict to list and sort by date
+                for date_str, data in dates_dict.items():
+                    grouped_data.append(data)
+                grouped_data.sort(key=lambda x: x['name'], reverse=(sort_by == 'date_desc'))
         
-        context.update({
+        # Ensure start_date and end_date are datetime objects for formatting
+        if isinstance(start_date, str):
+            start_date_formatted = start_date_obj.strftime('%b %d, %Y')
+        else:
+            start_date_formatted = start_date.strftime('%b %d, %Y')
+            
+        if isinstance(end_date, str):
+            end_date_formatted = end_date_obj.strftime('%b %d, %Y')
+        else:
+            end_date_formatted = end_date.strftime('%b %d, %Y')
+        
+        context = {
+            'title': 'Purchase Report',
+            'report_title': 'Purchase Report',
+            'report_subtitle': f"From {start_date_formatted} to {end_date_formatted}",
+            'generation_date': today.strftime("%B %d, %Y"),
+            'report_type': report_type,
             'purchases': purchases,
-            'total_purchases': total_purchases,
             'grouped_data': grouped_data,
-        })
+            'total_purchases': total_purchases,
+            'total_quantity_purchased': total_quantity_purchased,
+            'start_date': start_date,
+            'end_date': end_date,
+            'applied_filters': ', '.join(applied_filters) if applied_filters else None,
+            'company_name': customization.get('company_name'),
+            'company_tagline': customization.get('company_tagline'),
+            'company_details': customization.get('company_details'),
+            'terms_conditions': customization.get('terms_conditions'),
+        }
     
     elif report_type == 'wastage':
         # Wastage report
+        start_date = request.GET.get('start_date')
+        end_date = request.GET.get('end_date')
+        
+        if start_date and end_date:
+            start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+            end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
+        else:
+            end_date = timezone.now().date()
+            start_date = end_date - timedelta(days=30)
+        
+        # Add date range to applied filters
+        applied_filters.append(f"Date Range: {start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}")
+        
+        # Get wastage transactions 
         wastage = StockTransaction.objects.filter(
             transaction_type='wastage',  # Focus only on actual wastage transactions
-            transaction_date__date__gte=start_date_obj,
-            transaction_date__date__lte=end_date_obj
+            transaction_date__date__gte=start_date,
+            transaction_date__date__lte=end_date
         )
         
         # Apply additional filters
@@ -1894,6 +2061,7 @@ def generate_report_pdf(request, report_type):
         
         # Handle grouping
         grouped_data = None
+        
         if group_by:
             # Create a list of groups
             grouped_data = []
@@ -1929,11 +2097,34 @@ def generate_report_pdf(request, report_type):
                 reverse = sort_by == 'price_desc'
                 grouped_data.sort(key=lambda x: x['subtotal'], reverse=reverse)
         
-        context.update({
+        # Ensure start_date and end_date are datetime objects for formatting
+        if isinstance(start_date, str):
+            start_date_formatted = start_date_obj.strftime('%B %d, %Y')
+        else:
+            start_date_formatted = start_date.strftime('%B %d, %Y')
+            
+        if isinstance(end_date, str):
+            end_date_formatted = end_date_obj.strftime('%B %d, %Y')
+        else:
+            end_date_formatted = end_date.strftime('%B %d, %Y')
+        
+        context = {
+            'title': 'Wastage Report',
+            'report_title': 'Wastage Report',
+            'report_subtitle': f'From {start_date_formatted} to {end_date_formatted}',
+            'generation_date': today.strftime("%B %d, %Y"),
+            'report_type': report_type,
             'wastage': wastage,
-            'total_wastage': total_wastage,
             'grouped_data': grouped_data,
-        })
+            'total_wastage': total_wastage,
+            'start_date': start_date,
+            'end_date': end_date,
+            'applied_filters': ', '.join(applied_filters) if applied_filters else None,
+            'company_name': customization.get('company_name'),
+            'company_tagline': customization.get('company_tagline'),
+            'company_details': customization.get('company_details'),
+            'terms_conditions': customization.get('terms_conditions'),
+        }
     
     elif report_type == 'payment':
         # Payment report

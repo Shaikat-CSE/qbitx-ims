@@ -167,7 +167,9 @@
         </tbody>
         <tfoot>
             <tr>
-                <td colspan="6" class="text-end"><strong>Total Inventory Value:</strong></td>
+                <td colspan="4" class="text-end"><strong>Total Quantity:</strong></td>
+                <td class="numeric"><strong>{{ total_quantity }}</strong></td>
+                <td class="text-end"><strong>Total Value:</strong></td>
                 <td class="numeric"><strong>{{ total_value|floatformat:2 }}</strong></td>
             </tr>
         </tfoot>
@@ -241,11 +243,15 @@
                 </tr>
                 {% endfor %}
             {% endif %}
-            <tr class="total-row">
-                <td colspan="9" class="text-right">Total Sales:</td>
-                <td class="text-right">{{ total_sales|floatformat:2 }}</td>
-                <td colspan="3"></td>
-            </tr>
+            <tfoot>
+                <tr class="total-row">
+                    <td colspan="2" class="text-right"><strong>Total Quantity Sold:</strong></td>
+                    <td class="text-right"><strong>{{ total_quantity_sold }}</strong></td>
+                    <td colspan="6" class="text-right"><strong>Total Sales:</strong></td>
+                    <td class="text-right"><strong>{{ total_sales|floatformat:2 }}</strong></td>
+                    <td colspan="3"></td>
+                </tr>
+            </tfoot>
         </tbody>
     </table>
 
@@ -335,11 +341,15 @@
                 </tr>
                 {% endfor %}
             {% endif %}
-            <tr class="total-row">
-                <td colspan="8" class="text-right">Total Purchases:</td>
-                <td class="text-right">{{ total_purchases|floatformat:2 }}</td>
-                <td colspan="2"></td>
-            </tr>
+            <tfoot>
+                <tr class="total-row">
+                    <td colspan="2" class="text-right"><strong>Total Quantity Purchased:</strong></td>
+                    <td class="text-right"><strong>{{ total_quantity_purchased }}</strong></td>
+                    <td colspan="5" class="text-right"><strong>Total Purchases:</strong></td>
+                    <td class="text-right"><strong>{{ total_purchases|floatformat:2 }}</strong></td>
+                    <td colspan="2"></td>
+                </tr>
+            </tfoot>
         </tbody>
     </table>
 

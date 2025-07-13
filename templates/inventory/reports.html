@@ -201,9 +201,10 @@
                 </tbody>
                 <tfoot>
                     <tr class="table-dark">
-                        <td colspan="6" class="text-end"><strong>Total Inventory Value:</strong></td>
+                        <td colspan="4" class="text-end"><strong>Total Quantity:</strong></td>
+                        <td><strong>{{ total_quantity }}</strong></td>
+                        <td class="text-end"><strong>Total Value:</strong></td>
                         <td><strong>{{ total_value|floatformat:2 }}</strong></td>
-                        <td></td>
                     </tr>
                 </tfoot>
             </table>
@@ -362,7 +363,9 @@
                 </tbody>
                 <tfoot>
                     <tr class="table-dark">
-                        <td colspan="10" class="text-end"><strong>Total Sales:</strong></td>
+                        <td colspan="3" class="text-end"><strong>Total Quantity Sold:</strong></td>
+                        <td><strong>{{ total_quantity_sold }}</strong></td>
+                        <td colspan="5" class="text-end"><strong>Total Sales:</strong></td>
                         <td><strong>{{ total_sales|floatformat:2 }}</strong></td>
                         <td colspan="4"></td>
                     </tr>
@@ -490,7 +493,9 @@
                 </tbody>
                 <tfoot>
                     <tr class="table-dark">
-                        <td colspan="9" class="text-end"><strong>Total Purchases:</strong></td>
+                        <td colspan="2" class="text-end"><strong>Total Quantity Purchased:</strong></td>
+                        <td><strong>{{ total_quantity_purchased }}</strong></td>
+                        <td colspan="5" class="text-end"><strong>Total Purchases:</strong></td>
                         <td><strong>{{ total_purchases|floatformat:2 }}</strong></td>
                         <td colspan="2"></td>
                     </tr>
