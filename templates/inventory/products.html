@@ -54,24 +54,26 @@
     </div>
 </div>
 {% else %}
-<!-- Filter and Search -->
-<div class="row mb-3">
-    <div class="col-md-4">
-        <form method="get" action="{% url 'products' %}">
-            <select id="productTypeFilter" name="category" class="form-select" onchange="this.form.submit()">
-                <option value="">All Categories</option>
-                {% for category in categories %}
-                <option value="{{ category.id }}" {% if selected_category == category.id %}selected{% endif %}>{{ category.name }}</option>
-                {% endfor %}
-            </select>
-        </form>
-    </div>
-    <div class="col-md-8">
-        <form method="get" action="{% url 'products' %}">
-            <div class="input-group">
-                <span class="input-group-text"><i class="fas fa-search"></i></span>
-                <input type="text" id="searchInput" name="search" class="form-control" placeholder="Search by product name or SKU" value="{{ search_query }}">
-                <button type="submit" class="btn btn-primary">Search</button>
+<!-- Filter options -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" action="{% url 'products' %}" class="row g-3">
+            <div class="col-md-4">
+                <div class="input-group">
+                    <input type="text" class="form-control" placeholder="Search by name" name="search" value="{{ search_query }}">
+                    <button class="btn btn-outline-secondary" type="submit">Search</button>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <select name="category" class="form-select" onchange="this.form.submit()">
+                    <option value="">All Categories</option>
+                    {% for category in categories %}
+                    <option value="{{ category.id }}" {% if category_id == category.id|stringformat:"i" %}selected{% endif %}>{{ category.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <a href="{% url 'products' %}" class="btn btn-outline-secondary">Reset</a>
             </div>
         </form>
     </div>
@@ -112,7 +114,7 @@
                         <td>{% if product.expiry_date %}{{ product.expiry_date }}{% else %}-{% endif %}</td>
                         <td>
                             <div class="btn-group">
-                                <a href="{% url 'product_edit' product.id %}" class="btn btn-sm btn-outline-secondary">
+                                <a href="{% url 'product_edit' product.id %}{% if request.GET %}?{{ request.GET.urlencode }}{% endif %}" class="btn btn-sm btn-outline-secondary">
                                     <i class="fas fa-edit"></i>
                                 </a>
                                 <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#duplicateModal" data-product-id="{{ product.id }}" data-product-name="{{ product.name }}">
@@ -142,7 +144,7 @@
     <ul class="pagination justify-content-center">
         {% if products.has_previous %}
         <li class="page-item">
-            <a class="page-link" href="?page={{ products.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}" aria-label="Previous">
+            <a class="page-link" href="?page={{ products.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if category_id %}&category={{ category_id }}{% endif %}" aria-label="Previous">
                 <span aria-hidden="true">&laquo;</span>
             </a>
         </li>
@@ -157,14 +159,14 @@
             <li class="page-item active"><span class="page-link">{{ i }}</span></li>
             {% else %}
             <li class="page-item">
-                <a class="page-link" href="?page={{ i }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}">{{ i }}</a>
+                <a class="page-link" href="?page={{ i }}{% if search_query %}&search={{ search_query }}{% endif %}{% if category_id %}&category={{ category_id }}{% endif %}">{{ i }}</a>
             </li>
             {% endif %}
         {% endfor %}
         
         {% if products.has_next %}
         <li class="page-item">
-            <a class="page-link" href="?page={{ products.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}" aria-label="Next">
+            <a class="page-link" href="?page={{ products.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if category_id %}&category={{ category_id }}{% endif %}" aria-label="Next">
                 <span aria-hidden="true">&raquo;</span>
             </a>
         </li>
@@ -223,6 +225,18 @@
                     <div class="mb-3">
                         <label for="duplicateSKU" class="form-label">SKU</label>
                         <input type="text" class="form-control" id="duplicateSKU" name="sku" required>
+                        <small class="text-muted">You can use the same SKU if selecting a different warehouse</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="duplicateWarehouse" class="form-label">Warehouse</label>
+                        <select class="form-select" id="duplicateWarehouse" name="warehouse">
+                            <option value="">-- Select Warehouse --</option>
+                            {% for warehouse in warehouses %}
+                            <option value="{{ warehouse.id }}">{{ warehouse.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <small class="text-muted">Leave empty for no warehouse assignment</small>
                     </div>
                     
                     <div class="mb-3 form-check">
@@ -243,6 +257,10 @@
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Get current URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const queryString = window.location.search;
+        
         // Set up delete modal
         const deleteModal = document.getElementById('deleteModal');
         if (deleteModal) {
@@ -252,7 +270,12 @@
                 const productName = button.getAttribute('data-product-name');
                 
                 document.getElementById('deleteProductName').textContent = productName;
-                document.getElementById('deleteForm').action = "{% url 'product_delete' 0 %}".replace('0', productId);
+                let deleteUrl = "{% url 'product_delete' 0 %}".replace('0', productId);
+                // Append URL parameters if they exist
+                if (queryString) {
+                    deleteUrl += queryString;
+                }
+                document.getElementById('deleteForm').action = deleteUrl;
             });
         }
         
@@ -267,7 +290,14 @@
                 document.getElementById('duplicateProductName').textContent = productName;
                 document.getElementById('duplicateName').value = productName + ' (Copy)';
                 document.getElementById('duplicateSKU').value = '';
-                document.getElementById('duplicateForm').action = "{% url 'product_duplicate' 0 %}".replace('0', productId);
+                document.getElementById('duplicateWarehouse').value = ''; // Clear warehouse selection
+                
+                let duplicateUrl = "{% url 'product_duplicate' 0 %}".replace('0', productId);
+                // Append URL parameters if they exist
+                if (queryString) {
+                    duplicateUrl += queryString;
+                }
+                document.getElementById('duplicateForm').action = duplicateUrl;
             });
         }
     });

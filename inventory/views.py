@@ -277,6 +277,7 @@ def dashboard(request):
 @view_products_required
 def products(request):
     categories = Category.objects.all()
+    warehouses = Warehouse.objects.all()
     
     # Filter by category if specified
     category_id = request.GET.get('category')
@@ -326,7 +327,8 @@ def products(request):
     context = {
         'products': products,
         'categories': categories,
-        'selected_category': int(category_id) if category_id else None,
+        'warehouses': warehouses,
+        'category_id': category_id,
         'search_query': search_query,
     }
     
@@ -334,11 +336,30 @@ def products(request):
 
 @add_products_required
 def product_create(request):
+    # Get filter parameters to preserve them after redirect
+    category_id = request.GET.get('category')
+    search_query = request.GET.get('search')
+    page = request.GET.get('page')
+    
+    # Build redirect URL parameters
+    redirect_params = {}
+    if category_id:
+        redirect_params['category'] = category_id
+    if search_query:
+        redirect_params['search'] = search_query
+    if page:
+        redirect_params['page'] = page
+        
     if request.method == 'POST':
         form = ProductForm(request.POST)
         if form.is_valid():
             product = form.save()
             messages.success(request, f'Product "{product.name}" created successfully.')
+            
+            # Redirect with preserved filter parameters
+            if redirect_params:
+                redirect_url = reverse('products') + '?' + urlencode(redirect_params)
+                return redirect(redirect_url)
             return redirect('products')
     else:
         form = ProductForm()
@@ -353,11 +374,30 @@ def product_create(request):
 def product_edit(request, pk):
     product = get_object_or_404(Product, pk=pk)
     
+    # Get filter parameters to preserve them after redirect
+    category_id = request.GET.get('category')
+    search_query = request.GET.get('search')
+    page = request.GET.get('page')
+    
+    # Build redirect URL parameters
+    redirect_params = {}
+    if category_id:
+        redirect_params['category'] = category_id
+    if search_query:
+        redirect_params['search'] = search_query
+    if page:
+        redirect_params['page'] = page
+    
     if request.method == 'POST':
         form = ProductForm(request.POST, instance=product)
         if form.is_valid():
             product = form.save()
             messages.success(request, f'Product "{product.name}" updated successfully.')
+            
+            # Redirect with preserved filter parameters
+            if redirect_params:
+                redirect_url = reverse('products') + '?' + urlencode(redirect_params)
+                return redirect(redirect_url)
             return redirect('products')
     else:
         form = ProductForm(instance=product)
@@ -373,12 +413,35 @@ def product_edit(request, pk):
 def product_delete(request, pk):
     product = get_object_or_404(Product, pk=pk)
     
+    # Get filter parameters to preserve them after redirect
+    category_id = request.GET.get('category')
+    search_query = request.GET.get('search')
+    page = request.GET.get('page')
+    
+    # Build redirect URL parameters
+    redirect_params = {}
+    if category_id:
+        redirect_params['category'] = category_id
+    if search_query:
+        redirect_params['search'] = search_query
+    if page:
+        redirect_params['page'] = page
+    
     if request.method == 'POST':
         product_name = product.name
         product.delete()
         messages.success(request, f'Product "{product_name}" deleted successfully.')
+        
+        # Redirect with preserved filter parameters
+        if redirect_params:
+            redirect_url = reverse('products') + '?' + urlencode(redirect_params)
+            return redirect(redirect_url)
         return redirect('products')
     
+    # If not POST, redirect back to products with preserved filters
+    if redirect_params:
+        redirect_url = reverse('products') + '?' + urlencode(redirect_params)
+        return redirect(redirect_url)
     return redirect('products')
 
 @view_suppliers_required
@@ -2164,20 +2227,45 @@ def product_duplicate(request, pk):
     """Duplicate a product with variations"""
     original_product = get_object_or_404(Product, pk=pk)
     
+    # Get filter parameters to preserve them after redirect
+    category_id = request.GET.get('category')
+    search_query = request.GET.get('search')
+    page = request.GET.get('page')
+    
+    # Build redirect URL parameters for products page
+    products_redirect_params = {}
+    if category_id:
+        products_redirect_params['category'] = category_id
+    if search_query:
+        products_redirect_params['search'] = search_query
+    if page:
+        products_redirect_params['page'] = page
+    
     if request.method == 'POST':
         # Get form data
         name = request.POST.get('name')
         sku = request.POST.get('sku')
         copy_quantity = request.POST.get('copy_quantity') == 'on'
+        warehouse_id = request.POST.get('warehouse')
         
         # Validate form data
         if not name or not sku:
             messages.error(request, 'Name and SKU are required')
+            if products_redirect_params:
+                redirect_url = reverse('products') + '?' + urlencode(products_redirect_params)
+                return redirect(redirect_url)
             return redirect('products')
         
-        # Check if SKU already exists
-        if Product.objects.filter(sku=sku).exists():
-            messages.error(request, f'SKU {sku} already exists')
+        # Check if SKU already exists in the same warehouse
+        warehouse = None
+        if warehouse_id:
+            warehouse = get_object_or_404(Warehouse, pk=warehouse_id)
+        
+        if Product.objects.filter(sku=sku, warehouse=warehouse).exists():
+            messages.error(request, f'SKU {sku} already exists in the selected warehouse')
+            if products_redirect_params:
+                redirect_url = reverse('products') + '?' + urlencode(products_redirect_params)
+                return redirect(redirect_url)
             return redirect('products')
         
         # Create new product as a copy of the original
@@ -2192,14 +2280,24 @@ def product_duplicate(request, pk):
             quantity=original_product.quantity if copy_quantity else 0,
             reorder_level=original_product.reorder_level,
             shipment_number=original_product.shipment_number,
-            warehouse=original_product.warehouse,
+            warehouse=warehouse,
             expiry_date=original_product.expiry_date,
             supplier=original_product.supplier
         )
         
         messages.success(request, f'Product "{original_product.name}" duplicated successfully as "{name}"')
-        return redirect('product_edit', pk=new_product.id)
+        
+        # Add the filter parameters to the product_edit URL
+        edit_redirect_params = products_redirect_params.copy()
+        edit_url = reverse('product_edit', kwargs={'pk': new_product.id})
+        if edit_redirect_params:
+            edit_url += '?' + urlencode(edit_redirect_params)
+        return redirect(edit_url)
     
+    # If not POST, redirect back to products with preserved filters
+    if products_redirect_params:
+        redirect_url = reverse('products') + '?' + urlencode(products_redirect_params)
+        return redirect(redirect_url)
     return redirect('products')
 
 @login_required
@@ -2595,3 +2693,58 @@ def client_create_ajax(request):
             return JsonResponse({'success': False, 'error': str(e)})
     
     return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+@login_required
+def invoice_delete(request, pk):
+    """Delete an invoice"""
+    invoice = get_object_or_404(Invoice, pk=pk)
+    
+    if request.method == 'POST':
+        invoice_number = invoice.invoice_number
+        invoice.delete()
+        messages.success(request, f'Invoice #{invoice_number} deleted successfully.')
+        return redirect('invoices')
+    
+    # If not POST, redirect back to invoices
+    return redirect('invoices')
+
+@login_required
+def stock_transaction_delete(request, pk):
+    """Delete a stock transaction"""
+    transaction = get_object_or_404(StockTransaction, pk=pk)
+    
+    if request.method == 'POST':
+        # Store transaction info for success message
+        transaction_id = transaction.transaction_id
+        product_name = transaction.product.name
+        
+        # Check if this transaction has an associated invoice
+        reference_number = f"TRANS-{transaction.id}"
+        invoice = Invoice.objects.filter(notes__contains=reference_number).first()
+        
+        # If there's an associated invoice, delete it first
+        if invoice:
+            invoice.delete()
+        
+        # Revert the product quantity changes
+        product = transaction.product
+        if transaction.transaction_type == 'in' or transaction.transaction_type == 'return':
+            # If it was stock in, reduce the quantity
+            product.quantity -= transaction.quantity
+        elif transaction.transaction_type == 'out' or transaction.transaction_type == 'wastage':
+            # If it was stock out or wastage, add the quantity back
+            product.quantity += transaction.quantity
+        
+        # Save the product with updated quantity
+        product.save()
+        
+        # Delete the transaction
+        transaction.delete()
+        
+        messages.success(request, f'Transaction {transaction_id} for {product_name} deleted successfully.')
+        
+        # Redirect back to stock page
+        return redirect('stock')
+    
+    # If not POST, redirect back to stock
+    return redirect('stock')

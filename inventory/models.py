@@ -60,7 +60,7 @@ class Client(models.Model):
 
 class Product(models.Model):
     name = models.CharField(max_length=200)
-    sku = models.CharField(max_length=50, unique=True)
+    sku = models.CharField(max_length=50)  # Removed unique=True
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, related_name='products')
     description = models.TextField(blank=True, null=True)
     buying_price = models.DecimalField(max_digits=10, decimal_places=2)
@@ -75,6 +75,10 @@ class Product(models.Model):
     supplier = models.ForeignKey(Supplier, on_delete=models.SET_NULL, null=True, related_name='products')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        # Same SKU can exist in different warehouses
+        unique_together = [['sku', 'warehouse']]
     
     def __str__(self):
         return self.name

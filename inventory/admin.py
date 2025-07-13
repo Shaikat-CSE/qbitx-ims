@@ -20,8 +20,8 @@ class ClientAdmin(admin.ModelAdmin):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ('name', 'sku', 'category', 'quantity', 'unit_of_measure', 'buying_price', 'selling_price', 'profit_margin', 'is_low_stock')
-    list_filter = ('category', 'supplier')
+    list_display = ('name', 'sku', 'category', 'warehouse', 'quantity', 'unit_of_measure', 'buying_price', 'selling_price', 'profit_margin', 'is_low_stock')
+    list_filter = ('category', 'supplier', 'warehouse')
     search_fields = ('name', 'sku', 'description')
     readonly_fields = ('profit_margin', 'is_low_stock')
 

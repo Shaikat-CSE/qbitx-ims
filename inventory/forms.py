@@ -23,6 +23,22 @@ class ProductForm(forms.ModelForm):
             'expiry_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'supplier': forms.Select(attrs={'class': 'form-select'}),
         }
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        sku = cleaned_data.get('sku')
+        warehouse = cleaned_data.get('warehouse')
+        
+        # Check if a product with the same SKU exists in the same warehouse
+        if sku and warehouse:
+            # Exclude current instance when editing
+            instance_id = self.instance.id if self.instance and self.instance.pk else None
+            
+            existing_product = Product.objects.filter(sku=sku, warehouse=warehouse).exclude(id=instance_id).first()
+            if existing_product:
+                self.add_error('sku', f'A product with SKU "{sku}" already exists in the selected warehouse.')
+        
+        return cleaned_data
 
 class WarehouseForm(forms.ModelForm):
     class Meta:

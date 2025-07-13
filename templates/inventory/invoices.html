@@ -82,6 +82,9 @@
                                 <button type="button" class="btn btn-sm btn-outline-secondary" onclick="printInvoice({{ invoice.id }})">
                                     <i class="fas fa-print"></i>
                                 </button>
+                                <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteInvoiceModal{{ invoice.id }}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
                             </div>
                         </td>
                     </tr>
@@ -144,4 +147,29 @@
         window.open("{% url 'invoice_detail' 0 %}".replace('0', invoiceId) + "?print=true", "_blank");
     }
 </script>
+
+<!-- Delete Invoice Modals -->
+{% for invoice in invoices %}
+<div class="modal fade" id="deleteInvoiceModal{{ invoice.id }}" tabindex="-1" aria-labelledby="deleteInvoiceModalLabel{{ invoice.id }}" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteInvoiceModalLabel{{ invoice.id }}">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete Invoice #{{ invoice.invoice_number }}?</p>
+                <p class="text-danger"><strong>Warning:</strong> This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="post" action="{% url 'invoice_delete' invoice.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Delete Invoice</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
 {% endblock %} 
