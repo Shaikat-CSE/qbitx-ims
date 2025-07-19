@@ -12,8 +12,8 @@
     </div>
 </div>
 
-{% if not products %}
-<!-- Welcome Message (will be hidden when products exist) -->
+{% if not products and not search_performed and not category_id and not warehouse_id and not low_stock %}
+<!-- Welcome Message (only shown when there are no products in the system) -->
 <div class="card mb-4">
     <div class="card-body">
         <div class="text-center mb-4">
@@ -60,25 +60,76 @@
         <form method="get" action="{% url 'products' %}" class="row g-3">
             <div class="col-md-4">
                 <div class="input-group">
-                    <input type="text" class="form-control" placeholder="Search by name" name="search" value="{{ search_query }}">
+                    <input type="text" class="form-control" placeholder="Search by name or SKU" name="search" value="{{ search_query }}">
                     <button class="btn btn-outline-secondary" type="submit">Search</button>
                 </div>
+                <small class="form-text text-muted">Search by product name or SKU code (partial or complete)</small>
             </div>
             <div class="col-md-3">
-                <select name="category" class="form-select" onchange="this.form.submit()">
+                <select name="category" class="form-select">
                     <option value="">All Categories</option>
                     {% for category in categories %}
-                    <option value="{{ category.id }}" {% if category_id == category.id|stringformat:"i" %}selected{% endif %}>{{ category.name }}</option>
+                    <option value="{{ category.id }}" {% if category_id == category.id %}selected{% endif %}>{{ category.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select name="warehouse" class="form-select">
+                    <option value="">All Warehouses</option>
+                    {% for warehouse in warehouses %}
+                    <option value="{{ warehouse.id }}" {% if warehouse_id == warehouse.id %}selected{% endif %}>{{ warehouse.name }}</option>
                     {% endfor %}
                 </select>
             </div>
             <div class="col-md-2">
+                <button type="submit" class="btn btn-primary me-2">Filter</button>
                 <a href="{% url 'products' %}" class="btn btn-outline-secondary">Reset</a>
+            </div>
+            <div class="col-md-12">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="low_stock" value="true" id="lowStockCheck" {% if low_stock %}checked{% endif %} onchange="this.form.submit()">
+                    <label class="form-check-label" for="lowStockCheck">
+                        <span class="text-danger"><i class="fas fa-exclamation-triangle"></i> Show only low stock items</span>
+                    </label>
+                </div>
             </div>
         </form>
     </div>
 </div>
 
+{% if products|length == 0 %}
+<!-- No products found message - shown for any empty result set -->
+<div class="alert alert-info">
+    <div class="d-flex align-items-center">
+        <i class="fas fa-search me-3 fa-2x"></i>
+        <div>
+            <h5 class="mb-1">No products found</h5>
+            <p class="mb-0">
+                {% if search_query %}
+                    Your search for "<strong>{{ search_query }}</strong>" did not match any products.
+                {% elif category_id %}
+                    No products found in the selected category.
+                {% elif warehouse_id %}
+                    No products found in the selected warehouse.
+                {% elif low_stock %}
+                    No products with low stock levels found.
+                {% else %}
+                    No products found matching your criteria.
+                {% endif %}
+                Try adjusting your filters or search terms.
+            </p>
+        </div>
+    </div>
+    <div class="mt-3">
+        <a href="{% url 'products' %}" class="btn btn-outline-primary">
+            <i class="fas fa-times"></i> Clear Filters
+        </a>
+        <a href="{% url 'product_create' %}" class="btn btn-outline-success ms-2">
+            <i class="fas fa-plus"></i> Add New Product
+        </a>
+    </div>
+</div>
+{% else %}
 <!-- Products Table -->
 <div class="card">
     <div class="card-body">
@@ -129,11 +180,6 @@
                     {% endfor %}
                 </tbody>
             </table>
-            {% if not products %}
-            <div class="alert alert-info text-center">
-                No products found matching your criteria.
-            </div>
-            {% endif %}
         </div>
     </div>
 </div>
@@ -144,7 +190,7 @@
     <ul class="pagination justify-content-center">
         {% if products.has_previous %}
         <li class="page-item">
-            <a class="page-link" href="?page={{ products.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if category_id %}&category={{ category_id }}{% endif %}" aria-label="Previous">
+            <a class="page-link" href="?page={{ products.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if category_id %}&category={{ category_id }}{% endif %}{% if warehouse_id %}&warehouse={{ warehouse_id }}{% endif %}{% if low_stock %}&low_stock=true{% endif %}" aria-label="Previous">
                 <span aria-hidden="true">&laquo;</span>
             </a>
         </li>
@@ -159,14 +205,14 @@
             <li class="page-item active"><span class="page-link">{{ i }}</span></li>
             {% else %}
             <li class="page-item">
-                <a class="page-link" href="?page={{ i }}{% if search_query %}&search={{ search_query }}{% endif %}{% if category_id %}&category={{ category_id }}{% endif %}">{{ i }}</a>
+                <a class="page-link" href="?page={{ i }}{% if search_query %}&search={{ search_query }}{% endif %}{% if category_id %}&category={{ category_id }}{% endif %}{% if warehouse_id %}&warehouse={{ warehouse_id }}{% endif %}{% if low_stock %}&low_stock=true{% endif %}">{{ i }}</a>
             </li>
             {% endif %}
         {% endfor %}
         
         {% if products.has_next %}
         <li class="page-item">
-            <a class="page-link" href="?page={{ products.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if category_id %}&category={{ category_id }}{% endif %}" aria-label="Next">
+            <a class="page-link" href="?page={{ products.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if category_id %}&category={{ category_id }}{% endif %}{% if warehouse_id %}&warehouse={{ warehouse_id }}{% endif %}{% if low_stock %}&low_stock=true{% endif %}" aria-label="Next">
                 <span aria-hidden="true">&raquo;</span>
             </a>
         </li>
@@ -177,6 +223,7 @@
         {% endif %}
     </ul>
 </nav>
+{% endif %}
 {% endif %}
 {% endif %}
 
@@ -257,47 +304,59 @@
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Get current URL parameters
-        const urlParams = new URLSearchParams(window.location.search);
-        const queryString = window.location.search;
-        
-        // Set up delete modal
-        const deleteModal = document.getElementById('deleteModal');
+        // Delete modal functionality
+        var deleteModal = document.getElementById('deleteModal');
         if (deleteModal) {
-            deleteModal.addEventListener('show.bs.modal', function(event) {
-                const button = event.relatedTarget;
-                const productId = button.getAttribute('data-product-id');
-                const productName = button.getAttribute('data-product-name');
+            deleteModal.addEventListener('show.bs.modal', function (event) {
+                var button = event.relatedTarget;
+                var productId = button.getAttribute('data-product-id');
+                var productName = button.getAttribute('data-product-name');
                 
-                document.getElementById('deleteProductName').textContent = productName;
-                let deleteUrl = "{% url 'product_delete' 0 %}".replace('0', productId);
-                // Append URL parameters if they exist
-                if (queryString) {
-                    deleteUrl += queryString;
+                var deleteForm = document.getElementById('deleteForm');
+                var deleteProductName = document.getElementById('deleteProductName');
+                
+                // Update the form's action URL
+                deleteForm.action = '{% url "product_delete" 0 %}'.replace('0', productId);
+                
+                // Add any URL parameters from the current page
+                var urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.toString()) {
+                    deleteForm.action += '?' + urlParams.toString();
                 }
-                document.getElementById('deleteForm').action = deleteUrl;
+                
+                // Set the product name in the modal
+                deleteProductName.textContent = productName;
             });
         }
         
-        // Set up duplicate modal
-        const duplicateModal = document.getElementById('duplicateModal');
+        // Duplicate modal functionality
+        var duplicateModal = document.getElementById('duplicateModal');
         if (duplicateModal) {
-            duplicateModal.addEventListener('show.bs.modal', function(event) {
-                const button = event.relatedTarget;
-                const productId = button.getAttribute('data-product-id');
-                const productName = button.getAttribute('data-product-name');
+            duplicateModal.addEventListener('show.bs.modal', function (event) {
+                var button = event.relatedTarget;
+                var productId = button.getAttribute('data-product-id');
+                var productName = button.getAttribute('data-product-name');
                 
-                document.getElementById('duplicateProductName').textContent = productName;
-                document.getElementById('duplicateName').value = productName + ' (Copy)';
-                document.getElementById('duplicateSKU').value = '';
-                document.getElementById('duplicateWarehouse').value = ''; // Clear warehouse selection
+                var duplicateForm = document.getElementById('duplicateForm');
+                var duplicateProductName = document.getElementById('duplicateProductName');
+                var duplicateName = document.getElementById('duplicateName');
+                var duplicateSKU = document.getElementById('duplicateSKU');
                 
-                let duplicateUrl = "{% url 'product_duplicate' 0 %}".replace('0', productId);
-                // Append URL parameters if they exist
-                if (queryString) {
-                    duplicateUrl += queryString;
+                // Update the form's action URL
+                duplicateForm.action = '{% url "product_duplicate" 0 %}'.replace('0', productId);
+                
+                // Add any URL parameters from the current page
+                var urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.toString()) {
+                    duplicateForm.action += '?' + urlParams.toString();
                 }
-                document.getElementById('duplicateForm').action = duplicateUrl;
+                
+                // Set the product name in the modal
+                duplicateProductName.textContent = productName;
+                duplicateName.value = productName + ' (Copy)';
+                
+                // Generate a suggested SKU
+                duplicateSKU.value = 'COPY-' + Math.floor(Math.random() * 10000);
             });
         }
     });

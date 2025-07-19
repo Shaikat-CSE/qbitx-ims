@@ -154,7 +154,7 @@
                     <div>
                         Made by 
                         <a href="https://qbitxsolutions.com" target="_blank">QBITX Solutions</a>, 
-                        version 1.0.0
+                        version 1.0.2
                     </div>
                 </div>                
             </nav>
@@ -259,6 +259,44 @@
                 }, 1000);
             }
         }
+        
+        // Add keyboard support for calculator
+        document.addEventListener('DOMContentLoaded', function() {
+            const calculatorModal = document.getElementById('calculatorModal');
+            
+            // Add event listener for when modal is shown
+            calculatorModal.addEventListener('shown.bs.modal', function() {
+                // Add keydown event listener to document when modal is open
+                document.addEventListener('keydown', handleCalculatorKeydown);
+            });
+            
+            // Remove event listener when modal is hidden
+            calculatorModal.addEventListener('hidden.bs.modal', function() {
+                document.removeEventListener('keydown', handleCalculatorKeydown);
+            });
+            
+            // Handle keydown events for calculator
+            function handleCalculatorKeydown(event) {
+                // Prevent default behavior for these keys to avoid scrolling or other actions
+                if (['+', '-', '*', '/', '%', '.', 'Enter', 'Backspace', 'Delete', 'Escape'].includes(event.key) ||
+                    (event.key >= '0' && event.key <= '9')) {
+                    event.preventDefault();
+                }
+                
+                // Handle numeric keys and operators
+                if (event.key >= '0' && event.key <= '9') {
+                    calculatorAppend(event.key);
+                } else if (['+', '-', '*', '/', '%', '.'].includes(event.key)) {
+                    calculatorAppend(event.key);
+                } else if (event.key === 'Enter' || event.key === '=') {
+                    calculatorCalculate();
+                } else if (event.key === 'Backspace' || event.key === 'Delete') {
+                    calculatorDelete();
+                } else if (event.key === 'Escape') {
+                    calculatorClear();
+                }
+            }
+        });
     </script>
     
     {% block extra_js %}{% endblock %}

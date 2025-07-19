@@ -279,23 +279,45 @@ def products(request):
     categories = Category.objects.all()
     warehouses = Warehouse.objects.all()
     
-    # Filter by category if specified
+    # Filter parameters
     category_id = request.GET.get('category')
+    warehouse_id = request.GET.get('warehouse')
     search_query = request.GET.get('search', '')
+    low_stock = request.GET.get('low_stock')
     
     products_list = Product.objects.all().order_by('id')  # Add default ordering
     
     if category_id:
         products_list = products_list.filter(category_id=category_id)
     
+    if warehouse_id:
+        products_list = products_list.filter(warehouse_id=warehouse_id)
+    
+    # Filter for low stock items
+    if low_stock == 'true':
+        products_list = products_list.filter(quantity__lte=F('reorder_level'))
+    
+    # Track if search was performed
+    search_performed = bool(search_query)
+    
     if search_query:
-        # If search_query is numeric, treat as ID
+        # First try to find products with matching SKU (regardless of length)
+        sku_matches = Product.objects.filter(
+            Q(sku__iexact=search_query) | 
+            Q(sku__exact=search_query) |
+            Q(sku__icontains=search_query)
+        )
+        
+        # Then try to find products with matching name
+        name_matches = Product.objects.filter(name__icontains=search_query)
+        
+        # If search_query is numeric, also try to find by ID
+        id_matches = Product.objects.none()  # Empty queryset by default
         if search_query.isdigit():
-            products_list = products_list.filter(id=int(search_query))
-        else:
-            products_list = products_list.filter(
-                Q(name__icontains=search_query) | Q(sku__icontains=search_query)
-            )
+            id_matches = Product.objects.filter(id=int(search_query))
+        
+        # Combine all matches and remove duplicates
+        products_list = (sku_matches | name_matches | id_matches).distinct()
     
     # Return JSON if requested
     if request.GET.get('format') == 'json':
@@ -328,8 +350,11 @@ def products(request):
         'products': products,
         'categories': categories,
         'warehouses': warehouses,
-        'category_id': category_id,
+        'category_id': int(category_id) if category_id and category_id.isdigit() else None,
+        'warehouse_id': int(warehouse_id) if warehouse_id and warehouse_id.isdigit() else None,
         'search_query': search_query,
+        'low_stock': low_stock == 'true',
+        'search_performed': search_performed,
     }
     
     return render(request, 'inventory/products.html', context)
@@ -755,9 +780,13 @@ def stock_create(request):
     else:
         form = StockTransactionForm(initial={'transaction_date': timezone.now()})
     
+    # Get all categories for the product category filter
+    categories = Category.objects.all().order_by('name')
+    
     context = {
         'form': form,
-        'title': 'Add Stock Transaction'
+        'title': 'Add Stock Transaction',
+        'categories': categories
     }
     
     return render(request, 'inventory/stock_form.html', context)

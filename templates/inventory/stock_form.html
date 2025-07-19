@@ -28,84 +28,122 @@
             </div>
             {% endif %}
             
-                    <!-- Hidden fields for tax data -->
-                    {{ form.apply_taxes }}
-                    {{ form.vat_rate }}
-                    {{ form.ait_rate }}
-                    {{ form.final_price }}
-                    
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                        <label for="{{ form.product.id_for_label }}" class="form-label">Product</label>
-                        {{ form.product }}
-                        {% if form.product.errors %}
-                            <div class="form-error">{{ form.product.errors.0 }}</div>
-                        {% endif %}
-                    </div>
-                        
-                        <div class="col-md-6 mb-3">
-                        <label for="{{ form.transaction_type.id_for_label }}" class="form-label">Transaction Type</label>
-                        {{ form.transaction_type }}
-                        {% if form.transaction_type.errors %}
-                            <div class="form-error">{{ form.transaction_type.errors.0 }}</div>
-                        {% endif %}
+            <!-- Hidden fields for tax data -->
+            {{ form.apply_taxes }}
+            {{ form.vat_rate }}
+            {{ form.ait_rate }}
+            {{ form.final_price }}
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.transaction_type.id_for_label }}" class="form-label">Transaction Type</label>
+                    {{ form.transaction_type }}
+                    {% if form.transaction_type.errors %}
+                        <div class="form-error">{{ form.transaction_type.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.transaction_date.id_for_label }}" class="form-label">Transaction Date</label>
+                    {{ form.transaction_date }}
+                    {% if form.transaction_date.errors %}
+                        <div class="form-error">{{ form.transaction_date.errors.0 }}</div>
+                    {% endif %}
                 </div>
             </div>
             
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                        <label for="{{ form.quantity.id_for_label }}" class="form-label">Quantity</label>
-                        {{ form.quantity }}
-                        {% if form.quantity.errors %}
-                            <div class="form-error">{{ form.quantity.errors.0 }}</div>
-                            {% endif %}
-                        </div>
-                        
-                        <div class="col-md-6 mb-3">
-                            <label for="{{ form.transaction_date.id_for_label }}" class="form-label">Transaction Date</label>
-                            {{ form.transaction_date }}
-                            {% if form.transaction_date.errors %}
-                            <div class="form-error">{{ form.transaction_date.errors.0 }}</div>
-                        {% endif %}
-                    </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.source_warehouse.id_for_label }}" class="form-label">Source Warehouse</label>
+                    {{ form.source_warehouse }}
+                    {% if form.source_warehouse.errors %}
+                        <div class="form-error">{{ form.source_warehouse.errors.0 }}</div>
+                    {% endif %}
                 </div>
-                    
+                
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.destination_warehouse.id_for_label }}" class="form-label">Destination Warehouse</label>
+                    {{ form.destination_warehouse }}
+                    {% if form.destination_warehouse.errors %}
+                        <div class="form-error">{{ form.destination_warehouse.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="product_category" class="form-label">Product Category</label>
+                    <select id="product_category" class="form-select">
+                        <option value="">All Categories</option>
+                        {% for category in categories %}
+                            <option value="{{ category.id }}">{{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.product.id_for_label }}" class="form-label">Product</label>
+                    {{ form.product }}
+                    {% if form.product.errors %}
+                        <div class="form-error">{{ form.product.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.quantity.id_for_label }}" class="form-label">Quantity</label>
+                    {{ form.quantity }}
+                    {% if form.quantity.errors %}
+                        <div class="form-error">{{ form.quantity.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.wastage_amount.id_for_label }}" class="form-label">Wastage Amount</label>
+                    {{ form.wastage_amount }}
+                    {% if form.wastage_amount.errors %}
+                        <div class="form-error">{{ form.wastage_amount.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.buying_price.id_for_label }}" class="form-label">Buying Price</label>
+                    {{ form.buying_price }}
+                    {% if form.buying_price.errors %}
+                        <div class="form-error">{{ form.buying_price.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.selling_price.id_for_label }}" class="form-label">Selling Price</label>
+                    {{ form.selling_price }}
+                    {% if form.selling_price.errors %}
+                        <div class="form-error">{{ form.selling_price.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Tax Options (Always visible) -->
+            <div id="taxOptionsSection" class="mb-3 border rounded p-3 bg-light">
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="applyTaxes" name="apply_taxes">
+                    <label class="form-check-label" for="applyTaxes">
+                        Apply Tax Deductions
+                    </label>
+                </div>
+                
+                <div id="taxDetails" class="mt-3" style="display: none;">
                     <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="{{ form.buying_price.id_for_label }}" class="form-label">Buying Price</label>
-                        {{ form.buying_price }}
-                        {% if form.buying_price.errors %}
-                            <div class="form-error">{{ form.buying_price.errors.0 }}</div>
-                        {% endif %}
-                    </div>
-                        
-                        <div class="col-md-6 mb-3">
-                            <label for="{{ form.selling_price.id_for_label }}" class="form-label">Selling Price</label>
-                        {{ form.selling_price }}
-                        {% if form.selling_price.errors %}
-                            <div class="form-error">{{ form.selling_price.errors.0 }}</div>
-                        {% endif %}
+                        <div class="col-md-6 mb-2">
+                            <label for="vatRate" class="form-label">VAT Rate (%)</label>
+                            <input type="number" class="form-control" id="vatRate" name="vat_rate" value="9.1" step="0.1">
                         </div>
-                    </div>
-                    
-                    <!-- Tax Options (Always visible) -->
-                    <div id="taxOptionsSection" class="mb-3 border rounded p-3 bg-light">
-                        <div class="form-check mb-2">
-                            <input class="form-check-input" type="checkbox" id="applyTaxes" name="apply_taxes">
-                            <label class="form-check-label" for="applyTaxes">
-                                Apply Tax Deductions
-                            </label>
-                        </div>
-                        
-                        <div id="taxDetails" class="mt-3" style="display: none;">
-                            <div class="row">
-                                <div class="col-md-6 mb-2">
-                                    <label for="vatRate" class="form-label">VAT Rate (%)</label>
-                                    <input type="number" class="form-control" id="vatRate" name="vat_rate" value="9.1" step="0.1">
-                                </div>
-                                <div class="col-md-6 mb-2">
-                                    <label for="aitRate" class="form-label">AIT Rate (%)</label>
-                                    <input type="number" class="form-control" id="aitRate" name="ait_rate" value="5.0" step="0.1">
+                        <div class="col-md-6 mb-2">
+                            <label for="aitRate" class="form-label">AIT Rate (%)</label>
+                            <input type="number" class="form-control" id="aitRate" name="ait_rate" value="5.0" step="0.1">
                 </div>
             </div>
             
@@ -132,56 +170,34 @@
                         </div>
                     </div>
                     
-                    <div class="mb-3">
-                        <label for="{{ form.source_warehouse.id_for_label }}" class="form-label">Source Warehouse</label>
-                        {{ form.source_warehouse }}
-                        {% if form.source_warehouse.errors %}
-                        <div class="form-error">{{ form.source_warehouse.errors.0 }}</div>
-                        {% endif %}
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="{{ form.destination_warehouse.id_for_label }}" class="form-label">Destination Warehouse</label>
-                        {{ form.destination_warehouse }}
-                        {% if form.destination_warehouse.errors %}
-                        <div class="form-error">{{ form.destination_warehouse.errors.0 }}</div>
-                        {% endif %}
-            </div>
-            
-                    <div class="mb-3">
-                        <label for="{{ form.supplier.id_for_label }}" class="form-label">Supplier</label>
-                        {{ form.supplier }}
-                        {% if form.supplier.errors %}
-                        <div class="form-error">{{ form.supplier.errors.0 }}</div>
-                        {% endif %}
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="{{ form.client.id_for_label }}" class="form-label">Client</label>
-                        <div class="input-group">
-                            {{ form.client }}
-                            <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#createClientModal" id="createClientBtn">
-                                <i class="fas fa-plus"></i>
-                            </button>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.supplier.id_for_label }}" class="form-label">Supplier</label>
+                            {{ form.supplier }}
+                            {% if form.supplier.errors %}
+                                <div class="form-error">{{ form.supplier.errors.0 }}</div>
+                            {% endif %}
                         </div>
-                        {% if form.client.errors %}
-                        <div class="form-error">{{ form.client.errors.0 }}</div>
-                        {% endif %}
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.client.id_for_label }}" class="form-label">Client</label>
+                            <div class="input-group">
+                                {{ form.client }}
+                                <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#createClientModal" id="createClientBtn">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                            {% if form.client.errors %}
+                                <div class="form-error">{{ form.client.errors.0 }}</div>
+                            {% endif %}
+                        </div>
                     </div>
-                    
-                    <div class="mb-3">
-                        <label for="{{ form.wastage_amount.id_for_label }}" class="form-label">Wastage Amount</label>
-                        {{ form.wastage_amount }}
-                        {% if form.wastage_amount.errors %}
-                        <div class="form-error">{{ form.wastage_amount.errors.0 }}</div>
-                        {% endif %}
-                </div>
                     
                     <div class="mb-3">
                         <label for="{{ form.reference_number.id_for_label }}" class="form-label">Reference Number</label>
                         {{ form.reference_number }}
                         {% if form.reference_number.errors %}
-                        <div class="form-error">{{ form.reference_number.errors.0 }}</div>
+                            <div class="form-error">{{ form.reference_number.errors.0 }}</div>
                         {% endif %}
             </div>
             
@@ -189,7 +205,7 @@
                         <label for="{{ form.notes.id_for_label }}" class="form-label">Notes</label>
                         {{ form.notes }}
                         {% if form.notes.errors %}
-                        <div class="form-error">{{ form.notes.errors.0 }}</div>
+                            <div class="form-error">{{ form.notes.errors.0 }}</div>
                         {% endif %}
                     </div>
             
@@ -414,265 +430,316 @@
 {% block extra_js %}
 <script src="{% static 'js/stock.js' %}"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Initialize tax options section if transaction type is 'out'
-        const transactionType = document.getElementById('id_transaction_type').value;
-        if (transactionType === 'out') {
-            const taxOptionsSection = document.getElementById('taxOptionsSection');
-            if (taxOptionsSection) {
-                taxOptionsSection.style.display = 'block';
-            }
-            
-            // Show the create client button only for stock out transactions
-            const createClientBtn = document.getElementById('createClientBtn');
-            if (createClientBtn) {
-                createClientBtn.style.display = 'block';
-            }
-        } else {
-            // Hide the create client button for non-stock-out transactions
-            const createClientBtn = document.getElementById('createClientBtn');
-            if (createClientBtn) {
-                createClientBtn.style.display = 'none';
-            }
-        }
+$(document).ready(function() {
+    // Filter products by category
+    $('#product_category').change(function() {
+        var categoryId = $(this).val();
+        var $productSelect = $('#id_product');
         
-        // Handle transaction type change to show/hide client button
-        const transactionTypeSelect = document.getElementById('id_transaction_type');
-        if (transactionTypeSelect) {
-            transactionTypeSelect.addEventListener('change', function() {
-                const createClientBtn = document.getElementById('createClientBtn');
-                if (createClientBtn) {
-                    if (this.value === 'out') {
-                        createClientBtn.style.display = 'block';
-                    } else {
-                        createClientBtn.style.display = 'none';
-                    }
-                }
-            });
-        }
+        // Store current selection if possible
+        var currentProduct = $productSelect.val();
         
-        // Handle client creation
-        const saveClientBtn = document.getElementById('saveClientBtn');
-        if (saveClientBtn) {
-            saveClientBtn.addEventListener('click', function() {
-                const name = document.getElementById('clientName').value;
-                const contactPerson = document.getElementById('contactPerson').value;
-                const email = document.getElementById('clientEmail').value;
-                const phone = document.getElementById('clientPhone').value;
-                const address = document.getElementById('clientAddress').value;
-                const city = document.getElementById('clientCity').value;
-                const country = document.getElementById('clientCountry').value;
-                const notes = document.getElementById('clientNotes').value;
+        // Show loading indicator
+        $productSelect.html('<option value="">Loading...</option>');
+        
+        // Get products filtered by category
+        $.ajax({
+            url: '{% url "products" %}',
+            data: {
+                'category': categoryId,
+                'format': 'json'
+            },
+            dataType: 'json',
+            success: function(data) {
+                $productSelect.html('<option value="">Select Product</option>');
                 
-                if (!name) {
-                    alert('Client name is required');
-                    return;
-                }
-                
-                // Send AJAX request to create client
-                fetch('/imstransform/clients/create/ajax/', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-                    },
-                    body: JSON.stringify({
-                        name: name,
-                        contact_person: contactPerson,
-                        email: email,
-                        phone: phone,
-                        address: address,
-                        city: city,
-                        country: country,
-                        notes: notes
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // Add new client to select dropdown
-                        const clientSelect = document.getElementById('id_client');
-                        const option = new Option(data.client.name, data.client.id);
-                        clientSelect.add(option);
-                        clientSelect.value = data.client.id;
-                        
-                        // Close modal
-                        const modal = bootstrap.Modal.getInstance(document.getElementById('createClientModal'));
-                        modal.hide();
-                        
-                        // Show success message
-                        alert('Client created successfully');
-                    } else {
-                        alert('Error creating client: ' + data.error);
+                // Add products to dropdown
+                $.each(data, function(index, product) {
+                    var optionText = product.name;
+                    if (product.sku) {
+                        optionText += ' (' + product.sku + ')';
                     }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('An error occurred while creating the client');
-                });
-            });
-        }
-
-        // Handle product selection to display product info and transaction history
-        const productSelect = document.getElementById('id_product');
-        const productInfoCard = document.getElementById('productInfoCard');
-        const transactionDetailsCard = document.getElementById('transactionDetailsCard');
-        
-        if (productSelect) {
-            productSelect.addEventListener('change', function() {
-                if (this.value) {
-                    fetchProductDetails(this.value);
-                    fetchTransactionDetails(this.value);
-                } else {
-                    productInfoCard.style.display = 'none';
-                    transactionDetailsCard.style.display = 'none';
-                }
-            });
-            
-            // Check if a product is already selected on page load
-            if (productSelect.value) {
-                fetchProductDetails(productSelect.value);
-                fetchTransactionDetails(productSelect.value);
-            }
-        }
-        
-        // Function to fetch product details
-        function fetchProductDetails(productId) {
-            fetch(`/imstransform/products/?format=json&search=${productId}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data && data.length > 0) {
-                        const product = data[0];
-                        
-                        // Update product info card
-                        document.getElementById('productName').textContent = product.name;
-                        document.getElementById('productSku').textContent = product.sku;
-                        document.getElementById('productCategory').textContent = product.category_name || '-';
-                        document.getElementById('productQuantity').textContent = product.quantity;
-                        document.getElementById('productUom').textContent = product.unit_of_measure;
-                        document.getElementById('productBuyingPrice').textContent = product.buying_price;
-                        document.getElementById('productSellingPrice').textContent = product.selling_price;
-                        
-                        // Calculate profit margin
-                        const buyingPrice = parseFloat(product.buying_price);
-                        const sellingPrice = parseFloat(product.selling_price);
-                        let profitMargin = 0;
-                        
-                        if (buyingPrice > 0) {
-                            profitMargin = ((sellingPrice - buyingPrice) / buyingPrice) * 100;
-                        }
-                        
-                        document.getElementById('productProfitMargin').textContent = profitMargin.toFixed(2);
-                        document.getElementById('productWarehouse').textContent = product.warehouse_name || '-';
-                        
-                        // Show product info card
-                        productInfoCard.style.display = 'block';
-                        
-                        // Update form fields with product values
-                        document.getElementById('id_buying_price').value = product.buying_price;
-                        document.getElementById('id_selling_price').value = product.selling_price;
-                        
-                        // If product has a warehouse, set source warehouse
-                        if (product.warehouse_id) {
-                            const sourceWarehouseSelect = document.getElementById('id_source_warehouse');
-                            if (sourceWarehouseSelect) {
-                                sourceWarehouseSelect.value = product.warehouse_id;
-                            }
-                        }
-                        
-                        // Calculate taxes if applicable
-                        if (typeof calculateTaxes === 'function') {
-                            calculateTaxes();
-                        }
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching product details:', error);
-                    productInfoCard.style.display = 'none';
-                });
-        }
-        
-        // Function to fetch transaction details
-        function fetchTransactionDetails(productId) {
-            const transactionsList = document.getElementById('transactionsList');
-            
-            // Show loading indicator
-            transactionsList.innerHTML = '<tr><td colspan="5" class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading transactions...</td></tr>';
-            transactionDetailsCard.style.display = 'block';
-            
-            fetch(`/imstransform/stock/?format=json&product_id=${productId}`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    // Clear the transactions list
-                    transactionsList.innerHTML = '';
                     
-                    if (data && data.length > 0) {
-                        // Sort transactions by date (newest first)
-                        data.sort((a, b) => new Date(b.transaction_date) - new Date(a.transaction_date));
+                    var option = $('<option></option>')
+                        .attr('value', product.id)
+                        .text(optionText)
+                        .data('product', product);
                         
-                        // Take only the 5 most recent transactions
-                        const recentTransactions = data.slice(0, 5);
-                        
-                        // Add each transaction to the list
-                        recentTransactions.forEach(transaction => {
-                            const row = document.createElement('tr');
-                            
-                            // Format the date
-                            const transactionDate = new Date(transaction.transaction_date);
-                            const formattedDate = transactionDate.toLocaleDateString() + ' ' + 
-                                                transactionDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                            
-                            // Determine the badge class based on transaction type
-                            let typeClass = 'bg-secondary';
-                            if (transaction.transaction_type === 'in') typeClass = 'bg-primary';
-                            if (transaction.transaction_type === 'out') typeClass = 'bg-info';
-                            if (transaction.transaction_type === 'wastage') typeClass = 'bg-danger';
-                            if (transaction.transaction_type === 'return') typeClass = 'bg-warning';
-                            if (transaction.transaction_type === 'transfer') typeClass = 'bg-success';
-                            
-                            // Determine the payment status badge class
-                            let statusClass = 'bg-secondary';
-                            if (transaction.payment_status === 'paid') statusClass = 'bg-success';
-                            if (transaction.payment_status === 'due') statusClass = 'bg-danger';
-                            if (transaction.payment_status === 'partial') statusClass = 'bg-warning';
-                            if (transaction.payment_status === 'credit') statusClass = 'bg-info';
-                            
-                            // Get transaction type display name
-                            let typeDisplay = transaction.transaction_type.charAt(0).toUpperCase() + transaction.transaction_type.slice(1);
-                            
-                            // Get payment status display name
-                            let statusDisplay = 'N/A';
-                            if (transaction.payment_status === 'paid') statusDisplay = 'Paid';
-                            if (transaction.payment_status === 'due') statusDisplay = 'Due';
-                            if (transaction.payment_status === 'partial') statusDisplay = 'Partial';
-                            if (transaction.payment_status === 'credit') statusDisplay = 'Credit';
-                            
-                            // Create the row content
-                            row.innerHTML = `
-                                <td>${transaction.id}</td>
-                                <td>${formattedDate}</td>
-                                <td><span class="badge ${typeClass}">${typeDisplay}</span></td>
-                                <td>${transaction.quantity}</td>
-                                <td><span class="badge ${statusClass}">${statusDisplay}</span></td>
-                            `;
-                            
-                            transactionsList.appendChild(row);
-                        });
-            } else {
-                        // No transactions found
-                        transactionsList.innerHTML = '<tr><td colspan="5" class="text-center">No transactions found for this product</td></tr>';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching transaction data:', error);
-                    transactionsList.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Error loading transactions</td></tr>';
+                    $productSelect.append(option);
                 });
-        }
+                
+                // Try to restore previous selection
+                if (currentProduct) {
+                    $productSelect.val(currentProduct);
+                }
+                
+                // Trigger change to update product info
+                $productSelect.trigger('change');
+            },
+            error: function() {
+                $productSelect.html('<option value="">Error loading products</option>');
+            }
+        });
     });
+    
+    // Initialize tax options section if transaction type is 'out'
+    const transactionType = document.getElementById('id_transaction_type').value;
+    if (transactionType === 'out') {
+        const taxOptionsSection = document.getElementById('taxOptionsSection');
+        if (taxOptionsSection) {
+            taxOptionsSection.style.display = 'block';
+        }
+        
+        // Show the create client button only for stock out transactions
+        const createClientBtn = document.getElementById('createClientBtn');
+        if (createClientBtn) {
+            createClientBtn.style.display = 'block';
+        }
+    } else {
+        // Hide the create client button for non-stock-out transactions
+        const createClientBtn = document.getElementById('createClientBtn');
+        if (createClientBtn) {
+            createClientBtn.style.display = 'none';
+        }
+    }
+    
+    // Handle transaction type change to show/hide client button
+    const transactionTypeSelect = document.getElementById('id_transaction_type');
+    if (transactionTypeSelect) {
+        transactionTypeSelect.addEventListener('change', function() {
+            const createClientBtn = document.getElementById('createClientBtn');
+            if (createClientBtn) {
+                if (this.value === 'out') {
+                    createClientBtn.style.display = 'block';
+                } else {
+                    createClientBtn.style.display = 'none';
+                }
+            }
+        });
+    }
+    
+    // Handle client creation
+    const saveClientBtn = document.getElementById('saveClientBtn');
+    if (saveClientBtn) {
+        saveClientBtn.addEventListener('click', function() {
+            const name = document.getElementById('clientName').value;
+            const contactPerson = document.getElementById('contactPerson').value;
+            const email = document.getElementById('clientEmail').value;
+            const phone = document.getElementById('clientPhone').value;
+            const address = document.getElementById('clientAddress').value;
+            const city = document.getElementById('clientCity').value;
+            const country = document.getElementById('clientCountry').value;
+            const notes = document.getElementById('clientNotes').value;
+            
+            if (!name) {
+                alert('Client name is required');
+                return;
+            }
+            
+            // Send AJAX request to create client
+            fetch('/imstransform/clients/create/ajax/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: JSON.stringify({
+                    name: name,
+                    contact_person: contactPerson,
+                    email: email,
+                    phone: phone,
+                    address: address,
+                    city: city,
+                    country: country,
+                    notes: notes
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Add new client to select dropdown
+                    const clientSelect = document.getElementById('id_client');
+                    const option = new Option(data.client.name, data.client.id);
+                    clientSelect.add(option);
+                    clientSelect.value = data.client.id;
+                    
+                    // Close modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('createClientModal'));
+                    modal.hide();
+                    
+                    // Show success message
+                    alert('Client created successfully');
+                } else {
+                    alert('Error creating client: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while creating the client');
+            });
+        });
+    }
+
+    // Handle product selection to display product info and transaction history
+    const productSelect = document.getElementById('id_product');
+    const productInfoCard = document.getElementById('productInfoCard');
+    const transactionDetailsCard = document.getElementById('transactionDetailsCard');
+    
+    if (productSelect) {
+        productSelect.addEventListener('change', function() {
+            if (this.value) {
+                fetchProductDetails(this.value);
+                fetchTransactionDetails(this.value);
+            } else {
+                productInfoCard.style.display = 'none';
+                transactionDetailsCard.style.display = 'none';
+            }
+        });
+        
+        // Check if a product is already selected on page load
+        if (productSelect.value) {
+            fetchProductDetails(productSelect.value);
+            fetchTransactionDetails(productSelect.value);
+        }
+    }
+    
+    // Function to fetch product details
+    function fetchProductDetails(productId) {
+        fetch(`/imstransform/products/?format=json&search=${productId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data && data.length > 0) {
+                    const product = data[0];
+                    
+                    // Update product info card
+                    document.getElementById('productName').textContent = product.name;
+                    document.getElementById('productSku').textContent = product.sku;
+                    document.getElementById('productCategory').textContent = product.category_name || '-';
+                    document.getElementById('productQuantity').textContent = product.quantity;
+                    document.getElementById('productUom').textContent = product.unit_of_measure;
+                    document.getElementById('productBuyingPrice').textContent = product.buying_price;
+                    document.getElementById('productSellingPrice').textContent = product.selling_price;
+                    
+                    // Calculate profit margin
+                    const buyingPrice = parseFloat(product.buying_price);
+                    const sellingPrice = parseFloat(product.selling_price);
+                    let profitMargin = 0;
+                    
+                    if (buyingPrice > 0) {
+                        profitMargin = ((sellingPrice - buyingPrice) / buyingPrice) * 100;
+                    }
+                    
+                    document.getElementById('productProfitMargin').textContent = profitMargin.toFixed(2);
+                    document.getElementById('productWarehouse').textContent = product.warehouse_name || '-';
+                    
+                    // Show product info card
+                    productInfoCard.style.display = 'block';
+                    
+                    // Update form fields with product values
+                    document.getElementById('id_buying_price').value = product.buying_price;
+                    document.getElementById('id_selling_price').value = product.selling_price;
+                    
+                    // If product has a warehouse, set source warehouse
+                    if (product.warehouse_id) {
+                        const sourceWarehouseSelect = document.getElementById('id_source_warehouse');
+                        if (sourceWarehouseSelect) {
+                            sourceWarehouseSelect.value = product.warehouse_id;
+                        }
+                    }
+                    
+                    // Calculate taxes if applicable
+                    if (typeof calculateTaxes === 'function') {
+                        calculateTaxes();
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching product details:', error);
+                productInfoCard.style.display = 'none';
+            });
+    }
+    
+    // Function to fetch transaction details
+    function fetchTransactionDetails(productId) {
+        const transactionsList = document.getElementById('transactionsList');
+        
+        // Show loading indicator
+        transactionsList.innerHTML = '<tr><td colspan="5" class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading transactions...</td></tr>';
+        transactionDetailsCard.style.display = 'block';
+        
+        fetch(`/imstransform/stock/?format=json&product_id=${productId}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Clear the transactions list
+                transactionsList.innerHTML = '';
+                
+                if (data && data.length > 0) {
+                    // Sort transactions by date (newest first)
+                    data.sort((a, b) => new Date(b.transaction_date) - new Date(a.transaction_date));
+                    
+                    // Take only the 5 most recent transactions
+                    const recentTransactions = data.slice(0, 5);
+                    
+                    // Add each transaction to the list
+                    recentTransactions.forEach(transaction => {
+                        const row = document.createElement('tr');
+                        
+                        // Format the date
+                        const transactionDate = new Date(transaction.transaction_date);
+                        const formattedDate = transactionDate.toLocaleDateString() + ' ' + 
+                                            transactionDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                        
+                        // Determine the badge class based on transaction type
+                        let typeClass = 'bg-secondary';
+                        if (transaction.transaction_type === 'in') typeClass = 'bg-primary';
+                        if (transaction.transaction_type === 'out') typeClass = 'bg-info';
+                        if (transaction.transaction_type === 'wastage') typeClass = 'bg-danger';
+                        if (transaction.transaction_type === 'return') typeClass = 'bg-warning';
+                        if (transaction.transaction_type === 'transfer') typeClass = 'bg-success';
+                        
+                        // Determine the payment status badge class
+                        let statusClass = 'bg-secondary';
+                        if (transaction.payment_status === 'paid') statusClass = 'bg-success';
+                        if (transaction.payment_status === 'due') statusClass = 'bg-danger';
+                        if (transaction.payment_status === 'partial') statusClass = 'bg-warning';
+                        if (transaction.payment_status === 'credit') statusClass = 'bg-info';
+                        
+                        // Get transaction type display name
+                        let typeDisplay = transaction.transaction_type.charAt(0).toUpperCase() + transaction.transaction_type.slice(1);
+                        
+                        // Get payment status display name
+                        let statusDisplay = 'N/A';
+                        if (transaction.payment_status === 'paid') statusDisplay = 'Paid';
+                        if (transaction.payment_status === 'due') statusDisplay = 'Due';
+                        if (transaction.payment_status === 'partial') statusDisplay = 'Partial';
+                        if (transaction.payment_status === 'credit') statusDisplay = 'Credit';
+                        
+                        // Create the row content
+                        row.innerHTML = `
+                            <td>${transaction.id}</td>
+                            <td>${formattedDate}</td>
+                            <td><span class="badge ${typeClass}">${typeDisplay}</span></td>
+                            <td>${transaction.quantity}</td>
+                            <td><span class="badge ${statusClass}">${statusDisplay}</span></td>
+                        `;
+                        
+                        transactionsList.appendChild(row);
+                    });
+        } else {
+                    // No transactions found
+                    transactionsList.innerHTML = '<tr><td colspan="5" class="text-center">No transactions found for this product</td></tr>';
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching transaction data:', error);
+                transactionsList.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Error loading transactions</td></tr>';
+            });
+    }
+});
 </script>
 {% endblock %} 
