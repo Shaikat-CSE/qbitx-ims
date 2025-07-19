@@ -271,6 +271,9 @@ class StockTransaction(models.Model):
             if self.destination_warehouse:
                 self.product.warehouse = self.destination_warehouse
         elif self.transaction_type == 'out' or self.transaction_type == 'wastage':
+            # For outgoing transactions, ensure source_warehouse is set to product's warehouse if not specified
+            if not self.source_warehouse and self.product.warehouse:
+                self.source_warehouse = self.product.warehouse
             self.product.quantity -= self.quantity
         elif self.transaction_type == 'transfer':
             # For warehouse transfers, update the product's warehouse

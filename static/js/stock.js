@@ -166,6 +166,30 @@ function updateFormFields() {
             }
             break;
     }
+    
+    // Reset category and product selections when transaction type changes
+    const productCategorySelect = document.getElementById('product_category');
+    const productSelect = document.getElementById('id_product');
+    
+    if (productCategorySelect) {
+        productCategorySelect.innerHTML = '<option value="">Select Warehouse First</option>';
+    }
+    
+    if (productSelect) {
+        productSelect.innerHTML = '<option value="">Select Category First</option>';
+        
+        // Clear product info displays
+        const productInfoCard = document.getElementById('productInfoCard');
+        const transactionDetailsCard = document.getElementById('transactionDetailsCard');
+        
+        if (productInfoCard) {
+            productInfoCard.style.display = 'none';
+        }
+        
+        if (transactionDetailsCard) {
+            transactionDetailsCard.style.display = 'none';
+        }
+    }
 }
 
 // Function to update payment fields based on payment status
@@ -214,12 +238,14 @@ function updateProductPrices() {
     const productId = document.getElementById('id_product').value;
     if (!productId) return;
     
-    // Fetch product data using AJAX
+    // Fetch product data using AJAX with exact ID match
     fetch(`/imstransform/products/?format=json&search=${productId}`)
         .then(response => response.json())
         .then(data => {
             if (data && data.length > 0) {
-                const product = data[0];
+                // Find the exact product by ID
+                const product = data.find(p => p.id === parseInt(productId)) || data[0];
+                
                 // Update buying and selling price fields
                 document.getElementById('id_buying_price').value = product.buying_price;
                 document.getElementById('id_selling_price').value = product.selling_price;
@@ -236,45 +262,35 @@ function updateProductPrices() {
                     calculateTaxes();
                 }
                 // Always update product info card after updating prices
-                showProductInfo();
+                showProductInfo(product);
             }
         })
         .catch(error => console.error('Error fetching product data:', error));
 }
 
 // Function to show product info card and update info
-function showProductInfo() {
+function showProductInfo(productData) {
     const productId = document.getElementById('id_product').value;
     const productInfoCard = document.getElementById('productInfoCard');
     if (!productId) {
         productInfoCard.style.display = 'none';
         return;
     }
+    
+    // If product data is already provided, use it
+    if (productData) {
+        updateProductInfoCard(productData);
+        return;
+    }
+    
+    // Otherwise fetch the product data
     fetch(`/imstransform/products/?format=json&search=${productId}`)
         .then(response => response.json())
         .then(data => {
             if (data && data.length > 0) {
-                const product = data[0];
-                document.getElementById('productName').textContent = product.name;
-                document.getElementById('productSku').textContent = product.sku;
-                document.getElementById('productCategory').textContent = product.category_name || '-';
-                document.getElementById('productQuantity').textContent = product.quantity;
-                document.getElementById('productUom').textContent = product.unit_of_measure;
-                document.getElementById('productBuyingPrice').textContent = product.buying_price;
-                document.getElementById('productSellingPrice').textContent = product.selling_price;
-                // Calculate profit margin
-                const buyingPrice = parseFloat(product.buying_price);
-                const sellingPrice = parseFloat(product.selling_price);
-                let profitMargin = 0;
-                if (buyingPrice > 0) {
-                    profitMargin = ((sellingPrice - buyingPrice) / buyingPrice) * 100;
-                }
-                document.getElementById('productProfitMargin').textContent = profitMargin.toFixed(2);
-                document.getElementById('productWarehouse').textContent = product.warehouse_name || '-';
-                productInfoCard.style.display = 'block';
-                
-                // After showing product info, fetch and show transaction details
-                fetchTransactionDetails(productId);
+                // Find the exact product by ID
+                const product = data.find(p => p.id === parseInt(productId)) || data[0];
+                updateProductInfoCard(product);
             }
         })
         .catch(error => {
@@ -283,9 +299,43 @@ function showProductInfo() {
         });
 }
 
+// Helper function to update the product info card with product data
+function updateProductInfoCard(product) {
+    const productInfoCard = document.getElementById('productInfoCard');
+    
+    document.getElementById('productName').textContent = product.name;
+    document.getElementById('productSku').textContent = product.sku;
+    document.getElementById('productCategory').textContent = product.category_name || '-';
+    document.getElementById('productQuantity').textContent = product.quantity;
+    document.getElementById('productUom').textContent = product.unit_of_measure;
+    document.getElementById('productBuyingPrice').textContent = product.buying_price;
+    document.getElementById('productSellingPrice').textContent = product.selling_price;
+    
+    // Calculate profit margin
+    const buyingPrice = parseFloat(product.buying_price);
+    const sellingPrice = parseFloat(product.selling_price);
+    let profitMargin = 0;
+    if (buyingPrice > 0) {
+        profitMargin = ((sellingPrice - buyingPrice) / buyingPrice) * 100;
+    }
+    
+    document.getElementById('productProfitMargin').textContent = profitMargin.toFixed(2);
+    document.getElementById('productWarehouse').textContent = product.warehouse_name || '-';
+    productInfoCard.style.display = 'block';
+    
+    // After showing product info, fetch and show transaction details
+    fetchTransactionDetails(product.id);
+}
+
 // Function to fetch and display transaction details for the selected product
 function fetchTransactionDetails(productId) {
-    if (!productId) return;
+    if (!productId) {
+        const productSelect = document.getElementById('id_product');
+        if (productSelect) {
+            productId = productSelect.value;
+        }
+        if (!productId) return;
+    }
     
     const transactionDetailsCard = document.getElementById('transactionDetailsCard');
     const transactionsList = document.getElementById('transactionsList');
@@ -487,7 +537,22 @@ function updateTransactionPreview() {
     document.getElementById('previewTotalPrice').textContent = totalPrice.toFixed(2);
     document.getElementById('previewType').textContent = typeDisplay;
     document.getElementById('previewPaymentStatus').textContent = paymentStatusDisplay;
-    document.getElementById('previewWarehouse').textContent = sourceWarehouse;
+    
+    // Update warehouse display based on transaction type
+    const destinationWarehouseSelect = document.getElementById('id_destination_warehouse');
+    const destinationWarehouse = destinationWarehouseSelect ? 
+        destinationWarehouseSelect.options[destinationWarehouseSelect.selectedIndex]?.text : '-';
+        
+    if (transactionType === 'in' || transactionType === 'return') {
+        document.getElementById('previewWarehouse').textContent = `To: ${destinationWarehouse}`;
+    } else if (transactionType === 'out' || transactionType === 'wastage') {
+        document.getElementById('previewWarehouse').textContent = `From: ${sourceWarehouse}`;
+    } else if (transactionType === 'transfer') {
+        document.getElementById('previewWarehouse').textContent = 
+            `From: ${sourceWarehouse} → To: ${destinationWarehouse}`;
+    } else {
+        document.getElementById('previewWarehouse').textContent = sourceWarehouse;
+    }
     
     // Handle tax preview section
     const taxPreviewSection = document.getElementById('taxPreviewSection');

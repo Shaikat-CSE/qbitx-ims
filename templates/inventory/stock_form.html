@@ -3,6 +3,63 @@
 
 {% block title %}Add Stock Transaction - QBITX IMS Transform Suppliers{% endblock %}
 
+{% block extra_css %}
+<style>
+    .card-header {
+        padding: 0.75rem 1.25rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+    }
+    .card-header .card-title {
+        margin-bottom: 0;
+        font-size: 1.1rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+        color: #fff !important;
+    }
+    .card-body {
+        padding: 1.25rem;
+    }
+    #productInfoCard .card-header,
+    #transactionDetailsCard .card-header,
+    #transactionPreviewCard .card-header {
+        display: flex;
+        align-items: center;
+        min-height: 3rem;
+    }
+    .table-sm th, .table-sm td {
+        padding: 0.3rem;
+    }
+    .bg-primary {
+        background-color: #007bff !important;
+    }
+    .bg-info {
+        background-color: #17a2b8 !important;
+    }
+    .bg-success {
+        background-color: #28a745 !important;
+    }
+    .text-white {
+        color: #fff !important;
+    }
+    .card {
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        border: 1px solid rgba(0, 0, 0, 0.125);
+        border-radius: 0.25rem;
+    }
+    .card-header .fas {
+        font-size: 1.2rem;
+        color: #fff !important;
+    }
+    .me-2 {
+        margin-right: 0.5rem !important;
+    }
+    .fw-bold {
+        font-weight: 700 !important;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
     <h1 class="h2">{{ title }}</h1>
@@ -59,6 +116,7 @@
                     {% if form.source_warehouse.errors %}
                         <div class="form-error">{{ form.source_warehouse.errors.0 }}</div>
                     {% endif %}
+                    <small class="form-text text-muted">Required for stock out, wastage, and transfers</small>
                 </div>
                 
                 <div class="col-md-6 mb-3">
@@ -67,6 +125,7 @@
                     {% if form.destination_warehouse.errors %}
                         <div class="form-error">{{ form.destination_warehouse.errors.0 }}</div>
                     {% endif %}
+                    <small class="form-text text-muted">Required for stock in, returns, and transfers</small>
                 </div>
             </div>
             
@@ -74,11 +133,9 @@
                 <div class="col-md-6 mb-3">
                     <label for="product_category" class="form-label">Product Category</label>
                     <select id="product_category" class="form-select">
-                        <option value="">All Categories</option>
-                        {% for category in categories %}
-                            <option value="{{ category.id }}">{{ category.name }}</option>
-                        {% endfor %}
+                        <option value="">Select Warehouse First</option>
                     </select>
+                    <small class="form-text text-muted">Categories available in the selected warehouse</small>
                 </div>
                 
                 <div class="col-md-6 mb-3">
@@ -87,6 +144,7 @@
                     {% if form.product.errors %}
                         <div class="form-error">{{ form.product.errors.0 }}</div>
                     {% endif %}
+                    <small class="form-text text-muted">Products available in the selected category and warehouse</small>
                 </div>
             </div>
             
@@ -262,10 +320,11 @@
     <div class="col-md-4">
         <!-- Product Information Card -->
         <div class="card mb-4" id="productInfoCard" style="display: none;">
-            <div class="card-header bg-primary text-white">
-                <h5 class="card-title mb-0">Product Information</h5>
-    </div>
-    <div class="card-body">
+            <div class="card-header bg-primary text-white d-flex align-items-center">
+                <i class="fas fa-box-open me-2"></i>
+                <h5 class="card-title mb-0 fw-bold">Product Information</h5>
+            </div>
+            <div class="card-body">
                 <div id="productInfo">
                     <h5 id="productName" class="mb-3">-</h5>
                     <p><strong>SKU:</strong> <span id="productSku">-</span></p>
@@ -281,8 +340,9 @@
 
         <!-- Transaction Details Card -->
         <div class="card mb-4" id="transactionDetailsCard" style="display: none;">
-            <div class="card-header bg-info text-white">
-                <h5 class="card-title mb-0">Recent Transactions</h5>
+            <div class="card-header bg-info text-white d-flex align-items-center">
+                <i class="fas fa-history me-2"></i>
+                <h5 class="card-title mb-0 fw-bold">Recent Transactions</h5>
             </div>
             <div class="card-body">
                 <div id="transactionDetails">
@@ -295,14 +355,14 @@
                                     <th>Type</th>
                                     <th>Qty</th>
                                     <th>Status</th>
-                    </tr>
+                                </tr>
                             </thead>
                             <tbody id="transactionsList">
-                    <tr>
+                                <tr>
                                     <td colspan="5" class="text-center">Select a product to view transactions</td>
-                    </tr>
+                                </tr>
                             </tbody>
-                </table>
+                        </table>
                     </div>
                     <div class="text-center mt-2">
                         <small class="text-muted">Showing recent transactions for this product</small>
@@ -313,8 +373,9 @@
 
         <!-- Transaction Preview Card -->
         <div class="card mb-4" id="transactionPreviewCard">
-            <div class="card-header bg-success text-white">
-                <h5 class="card-title mb-0">Transaction Preview</h5>
+            <div class="card-header bg-success text-white d-flex align-items-center">
+                <i class="fas fa-calculator me-2"></i>
+                <h5 class="card-title mb-0 fw-bold">Transaction Preview</h5>
             </div>
             <div class="card-body">
                 <div class="alert alert-info mb-3">
@@ -352,8 +413,9 @@
 
         <!-- Transaction Types Card -->
         <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">Transaction Types</h5>
+            <div class="card-header d-flex align-items-center">
+                <i class="fas fa-exchange-alt me-2"></i>
+                <h5 class="card-title mb-0 fw-bold">Transaction Types</h5>
             </div>
             <div class="card-body">
                 <p><strong>Stock In:</strong> Add new inventory to the warehouse.</p>
@@ -431,24 +493,122 @@
 <script src="{% static 'js/stock.js' %}"></script>
 <script>
 $(document).ready(function() {
-    // Filter products by category
-    $('#product_category').change(function() {
-        var categoryId = $(this).val();
-        var $productSelect = $('#id_product');
+    // Initialize form fields based on transaction type
+    updateFormFields();
+    
+    // Load categories based on selected warehouse
+    function loadCategoriesByWarehouse() {
+        // Determine which warehouse to use based on transaction type
+        const transactionType = $('#id_transaction_type').val();
+        let warehouseId = null;
+        
+        if (transactionType === 'in' || transactionType === 'return') {
+            warehouseId = $('#id_destination_warehouse').val();
+        } else if (transactionType === 'out' || transactionType === 'wastage') {
+            warehouseId = $('#id_source_warehouse').val();
+        } else if (transactionType === 'transfer') {
+            // For transfers, use source warehouse for filtering
+            warehouseId = $('#id_source_warehouse').val();
+        }
+        
+        if (!warehouseId) {
+            // If no warehouse selected, clear categories
+            $('#product_category').html('<option value="">Select Warehouse First</option>');
+            return;
+        }
+        
+        // Show loading indicator
+        $('#product_category').html('<option value="">Loading...</option>');
+        
+        // Get categories for the selected warehouse
+        $.ajax({
+            url: '{% url "products" %}',
+            data: {
+                'warehouse': warehouseId,
+                'format': 'json'
+            },
+            dataType: 'json',
+            success: function(data) {
+                // Extract unique categories from products
+                const categories = {};
+                data.forEach(function(product) {
+                    if (product.category_id && product.category_name) {
+                        categories[product.category_id] = product.category_name;
+                    }
+                });
+                
+                // Update category dropdown
+                const $categorySelect = $('#product_category');
+                
+                // If no products found in this warehouse
+                if (data.length === 0) {
+                    $categorySelect.html('<option value="">No Products in this Warehouse</option>');
+                    $('#id_product').html('<option value="">No Products Available</option>');
+                    return;
+                }
+                
+                $categorySelect.html('<option value="">All Categories</option>');
+                
+                // Add categories to dropdown
+                Object.keys(categories).forEach(function(categoryId) {
+                    $categorySelect.append(
+                        $('<option></option>')
+                            .attr('value', categoryId)
+                            .text(categories[categoryId])
+                    );
+                });
+                
+                // If no categories found
+                if (Object.keys(categories).length === 0) {
+                    $categorySelect.html('<option value="">No Categories Available</option>');
+                }
+                
+                // Trigger change to update products
+                $categorySelect.trigger('change');
+            },
+            error: function() {
+                $('#product_category').html('<option value="">Error loading categories</option>');
+            }
+        });
+    }
+    
+    // Load products based on selected warehouse and category
+    function loadProductsByWarehouseAndCategory() {
+        // Determine which warehouse to use based on transaction type
+        const transactionType = $('#id_transaction_type').val();
+        let warehouseId = null;
+        
+        if (transactionType === 'in' || transactionType === 'return') {
+            warehouseId = $('#id_destination_warehouse').val();
+        } else if (transactionType === 'out' || transactionType === 'wastage') {
+            warehouseId = $('#id_source_warehouse').val();
+        } else if (transactionType === 'transfer') {
+            // For transfers, use source warehouse for filtering
+            warehouseId = $('#id_source_warehouse').val();
+        }
+        
+        const categoryId = $('#product_category').val();
+        const $productSelect = $('#id_product');
         
         // Store current selection if possible
-        var currentProduct = $productSelect.val();
+        const currentProduct = $productSelect.val();
         
         // Show loading indicator
         $productSelect.html('<option value="">Loading...</option>');
         
-        // Get products filtered by category
+        // Build query parameters
+        const queryParams = { 'format': 'json' };
+        if (warehouseId) {
+            queryParams['warehouse'] = warehouseId;
+        }
+        if (categoryId) {
+            queryParams['category'] = categoryId;
+        }
+        
+        // Get products filtered by warehouse and category
         $.ajax({
             url: '{% url "products" %}',
-            data: {
-                'category': categoryId,
-                'format': 'json'
-            },
+            data: queryParams,
             dataType: 'json',
             success: function(data) {
                 $productSelect.html('<option value="">Select Product</option>');
@@ -470,16 +630,40 @@ $(document).ready(function() {
                 
                 // Try to restore previous selection
                 if (currentProduct) {
-                    $productSelect.val(currentProduct);
+                    // Check if the previously selected product is still in the list
+                    var productStillExists = false;
+                    $productSelect.find('option').each(function() {
+                        if ($(this).val() === currentProduct) {
+                            productStillExists = true;
+                            return false; // Break the loop
+                        }
+                    });
+                    
+                    if (productStillExists) {
+                        $productSelect.val(currentProduct);
+                        // Trigger change to update product info
+                        $productSelect.trigger('change');
+                    } else {
+                        // Clear product info if the product is no longer available
+                        document.getElementById('productInfoCard').style.display = 'none';
+                        document.getElementById('transactionDetailsCard').style.display = 'none';
+                    }
                 }
-                
-                // Trigger change to update product info
-                $productSelect.trigger('change');
             },
             error: function() {
                 $productSelect.html('<option value="">Error loading products</option>');
             }
         });
+    }
+    
+    // Add event listeners for warehouse changes
+    $('#id_source_warehouse, #id_destination_warehouse').change(function() {
+        loadCategoriesByWarehouse();
+    });
+    
+    // Filter products by category
+    $('#product_category').change(function() {
+        loadProductsByWarehouseAndCategory();
     });
     
     // Initialize tax options section if transaction type is 'out'
@@ -503,10 +687,13 @@ $(document).ready(function() {
         }
     }
     
-    // Handle transaction type change to show/hide client button
+    // Handle transaction type change to show/hide client button and update warehouse fields
     const transactionTypeSelect = document.getElementById('id_transaction_type');
     if (transactionTypeSelect) {
         transactionTypeSelect.addEventListener('change', function() {
+            updateFormFields();
+            loadCategoriesByWarehouse();
+            
             const createClientBtn = document.getElementById('createClientBtn');
             if (createClientBtn) {
                 if (this.value === 'out') {
@@ -517,6 +704,9 @@ $(document).ready(function() {
             }
         });
     }
+    
+    // Initialize warehouses based on transaction type
+    loadCategoriesByWarehouse();
     
     // Handle client creation
     const saveClientBtn = document.getElementById('saveClientBtn');
@@ -588,8 +778,12 @@ $(document).ready(function() {
     if (productSelect) {
         productSelect.addEventListener('change', function() {
             if (this.value) {
-                fetchProductDetails(this.value);
-                fetchTransactionDetails(this.value);
+                // Clear any previous product info
+                productInfoCard.style.display = 'none';
+                transactionDetailsCard.style.display = 'none';
+                
+                // Get the selected product data and update prices
+                updateProductPrices();
             } else {
                 productInfoCard.style.display = 'none';
                 transactionDetailsCard.style.display = 'none';
@@ -598,8 +792,7 @@ $(document).ready(function() {
         
         // Check if a product is already selected on page load
         if (productSelect.value) {
-            fetchProductDetails(productSelect.value);
-            fetchTransactionDetails(productSelect.value);
+            updateProductPrices();
         }
     }
     

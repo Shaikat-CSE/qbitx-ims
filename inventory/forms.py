@@ -187,7 +187,8 @@ class StockTransactionForm(forms.ModelForm):
             
         # For stock out, source warehouse should be set if available
         if transaction_type == 'out' and product and product.warehouse:
-            cleaned_data['source_warehouse'] = product.warehouse
+            if not cleaned_data.get('source_warehouse'):
+                cleaned_data['source_warehouse'] = product.warehouse
         
         # Payment validation
         if payment_status in ['due', 'partial', 'credit'] and not cleaned_data.get('payment_due_date'):

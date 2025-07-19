@@ -301,23 +301,43 @@ def products(request):
     search_performed = bool(search_query)
     
     if search_query:
-        # First try to find products with matching SKU (regardless of length)
-        sku_matches = Product.objects.filter(
-            Q(sku__iexact=search_query) | 
-            Q(sku__exact=search_query) |
-            Q(sku__icontains=search_query)
-        )
-        
-        # Then try to find products with matching name
-        name_matches = Product.objects.filter(name__icontains=search_query)
-        
-        # If search_query is numeric, also try to find by ID
-        id_matches = Product.objects.none()  # Empty queryset by default
+        # If search_query is numeric and matches an ID exactly, prioritize that match
         if search_query.isdigit():
-            id_matches = Product.objects.filter(id=int(search_query))
-        
-        # Combine all matches and remove duplicates
-        products_list = (sku_matches | name_matches | id_matches).distinct()
+            exact_id_match = Product.objects.filter(id=int(search_query))
+            if exact_id_match.exists():
+                products_list = exact_id_match
+            else:
+                # Otherwise, perform the regular search
+                # First try to find products with matching SKU (regardless of length)
+                sku_matches = Product.objects.filter(
+                    Q(sku__iexact=search_query) | 
+                    Q(sku__exact=search_query) |
+                    Q(sku__icontains=search_query)
+                )
+                
+                # Then try to find products with matching name
+                name_matches = Product.objects.filter(name__icontains=search_query)
+                
+                # If search_query is numeric, also try to find by ID (as partial match)
+                id_matches = Product.objects.none()  # Empty queryset by default
+                if search_query.isdigit():
+                    id_matches = Product.objects.filter(id=int(search_query))
+                
+                # Combine all matches and remove duplicates
+                products_list = (sku_matches | name_matches | id_matches).distinct()
+        else:
+            # First try to find products with matching SKU (regardless of length)
+            sku_matches = Product.objects.filter(
+                Q(sku__iexact=search_query) | 
+                Q(sku__exact=search_query) |
+                Q(sku__icontains=search_query)
+            )
+            
+            # Then try to find products with matching name
+            name_matches = Product.objects.filter(name__icontains=search_query)
+            
+            # Combine all matches and remove duplicates
+            products_list = (sku_matches | name_matches).distinct()
     
     # Return JSON if requested
     if request.GET.get('format') == 'json':
@@ -695,6 +715,10 @@ def stock(request):
                 'amount_due': float(transaction.amount_due) if transaction.amount_due else 0,
                 'reference_number': transaction.reference_number,
                 'notes': transaction.notes,
+                'source_warehouse_id': transaction.source_warehouse_id,
+                'source_warehouse_name': transaction.source_warehouse.name if transaction.source_warehouse else None,
+                'destination_warehouse_id': transaction.destination_warehouse_id,
+                'destination_warehouse_name': transaction.destination_warehouse.name if transaction.destination_warehouse else None,
             })
         return JsonResponse(transactions_data, safe=False)
     
@@ -780,13 +804,15 @@ def stock_create(request):
     else:
         form = StockTransactionForm(initial={'transaction_date': timezone.now()})
     
-    # Get all categories for the product category filter
+    # Get all categories and warehouses for the filters
     categories = Category.objects.all().order_by('name')
+    warehouses = Warehouse.objects.all().order_by('name')
     
     context = {
         'form': form,
         'title': 'Add Stock Transaction',
-        'categories': categories
+        'categories': categories,
+        'warehouses': warehouses
     }
     
     return render(request, 'inventory/stock_form.html', context)
@@ -2773,7 +2799,7 @@ def get_transaction_details(request, transaction_id):
             'id': transaction.id,
             'transaction_id': transaction.transaction_id,
             'product_id': transaction.product_id,
-            'product_name': transaction.product.name,
+            'product_name': transaction.product.name if transaction.product else None,
             'transaction_type': transaction.transaction_type,
             'transaction_type_display': transaction.get_transaction_type_display(),
             'transaction_date': transaction.transaction_date.isoformat(),
@@ -2788,6 +2814,10 @@ def get_transaction_details(request, transaction_id):
             'amount_due': float(transaction.amount_due),
             'reference_number': transaction.reference_number,
             'notes': transaction.notes,
+            'source_warehouse_id': transaction.source_warehouse_id,
+            'source_warehouse_name': transaction.source_warehouse.name if transaction.source_warehouse else None,
+            'destination_warehouse_id': transaction.destination_warehouse_id,
+            'destination_warehouse_name': transaction.destination_warehouse.name if transaction.destination_warehouse else None,
         }
         
         # Add client or supplier info if available

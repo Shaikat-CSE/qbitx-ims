@@ -89,6 +89,7 @@
                         <th>Unit Price</th>
                         <th>Wastage</th>
                         <th>Profit/Loss</th>
+                        <th>Warehouse</th>
                         <th>Supplier/Client</th>
                         <th>Actions</th>
                     </tr>
@@ -108,6 +109,8 @@
                             <span class="badge bg-warning text-dark">Wastage</span>
                             {% elif transaction.transaction_type == 'return' %}
                             <span class="badge bg-info">Return</span>
+                            {% elif transaction.transaction_type == 'transfer' %}
+                            <span class="badge bg-primary">Transfer</span>
                             {% endif %}
                             
                             {% if transaction.transaction_type == 'out' and transaction.client %}
@@ -165,6 +168,16 @@
                             <span class="text-danger">{{ transaction.profit_loss }} BDT</span>
                             {% else %}
                             <span>{{ transaction.profit_loss }} BDT</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if transaction.transaction_type == 'in' or transaction.transaction_type == 'return' %}
+                                {% if transaction.destination_warehouse %}{{ transaction.destination_warehouse.name }}{% else %}-{% endif %}
+                            {% elif transaction.transaction_type == 'out' or transaction.transaction_type == 'wastage' %}
+                                {% if transaction.source_warehouse %}{{ transaction.source_warehouse.name }}{% else %}-{% endif %}
+                            {% elif transaction.transaction_type == 'transfer' %}
+                                From: {% if transaction.source_warehouse %}{{ transaction.source_warehouse.name }}{% else %}-{% endif %}<br>
+                                To: {% if transaction.destination_warehouse %}{{ transaction.destination_warehouse.name }}{% else %}-{% endif %}
                             {% endif %}
                         </td>
                         <td>
