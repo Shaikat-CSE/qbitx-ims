@@ -5,6 +5,7 @@ from django.db.models.signals import post_migrate
 from django.dispatch import receiver
 from decimal import Decimal
 from django.utils import timezone
+from django.core.exceptions import ValidationError
 
 class Category(models.Model):
     name = models.CharField(max_length=100)
@@ -66,8 +67,8 @@ class Product(models.Model):
     buying_price = models.DecimalField(max_digits=10, decimal_places=2)
     selling_price = models.DecimalField(max_digits=10, decimal_places=2)
     unit_of_measure = models.CharField(max_length=50)  # UOM
-    quantity = models.IntegerField(default=0)
-    reorder_level = models.IntegerField(default=10)
+    quantity = models.DecimalField(max_digits=10, decimal_places=3, default=0)
+    reorder_level = models.DecimalField(max_digits=10, decimal_places=3, default=10)
     shipment_number = models.CharField(max_length=100, blank=True, null=True)
     location = models.CharField(max_length=100, blank=True, null=True)
     warehouse = models.ForeignKey(Warehouse, on_delete=models.SET_NULL, null=True, blank=True, related_name='products')
@@ -113,7 +114,7 @@ class StockTransaction(models.Model):
     transaction_id = models.CharField(max_length=20, unique=True, blank=True, null=True, help_text="Unique transaction identifier")
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='stock_transactions')
     transaction_type = models.CharField(max_length=10, choices=TRANSACTION_TYPES)
-    quantity = models.IntegerField()
+    quantity = models.DecimalField(max_digits=10, decimal_places=3)
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
     buying_price = models.DecimalField(max_digits=10, decimal_places=2)
     selling_price = models.DecimalField(max_digits=10, decimal_places=2)
@@ -264,29 +265,119 @@ class StockTransaction(models.Model):
             self.amount_paid = 0
             self.amount_due = 0
         
-        # Update product quantity
-        if self.transaction_type == 'in' or self.transaction_type == 'return':
-            self.product.quantity += self.quantity
-            # Update warehouse if specified
-            if self.destination_warehouse:
-                self.product.warehouse = self.destination_warehouse
-        elif self.transaction_type == 'out' or self.transaction_type == 'wastage':
-            # For outgoing transactions, ensure source_warehouse is set to product's warehouse if not specified
-            if not self.source_warehouse and self.product.warehouse:
-                self.source_warehouse = self.product.warehouse
-            self.product.quantity -= self.quantity
-        elif self.transaction_type == 'transfer':
-            # For warehouse transfers, update the product's warehouse
-            if self.destination_warehouse:
-                self.product.warehouse = self.destination_warehouse
-        
-        self.product.save()
-        
         # Flag to check if this is a new transaction
         is_new = self.pk is None
         
-        # Save the transaction
+        # Store current product state before saving
+        old_product = None
+        if not is_new:
+            try:
+                old_product = StockTransaction.objects.get(pk=self.pk)
+            except StockTransaction.DoesNotExist:
+                pass
+        
+        # Save the transaction first without updating product quantities
         super().save(*args, **kwargs)
+        
+        # Now update product quantity and warehouse based on transaction type
+        if is_new:  # Only update quantities for new transactions
+            if self.transaction_type == 'in' or self.transaction_type == 'return':
+                # For incoming transactions, increase product quantity
+                self.product.quantity += self.quantity
+                # Update warehouse if specified
+                if self.destination_warehouse:
+                    self.product.warehouse = self.destination_warehouse
+                self.product.save()
+            elif self.transaction_type == 'out' or self.transaction_type == 'wastage':
+                # For outgoing transactions, ensure source_warehouse is set to product's warehouse if not specified
+                if not self.source_warehouse and self.product.warehouse:
+                    self.source_warehouse = self.product.warehouse
+                    # Need to save again to update the source_warehouse
+                    super().save(update_fields=['source_warehouse'])
+                
+                # Decrease product quantity
+                self.product.quantity -= self.quantity
+                self.product.save()
+            elif self.transaction_type == 'transfer':
+                # For warehouse transfers, handle quantity and warehouse updates correctly
+                try:
+                    # 1. First check if source and destination warehouses are specified
+                    if not self.source_warehouse:
+                        raise ValidationError("Source warehouse must be specified for transfers")
+                    
+                    if not self.destination_warehouse:
+                        raise ValidationError("Destination warehouse must be specified for transfers")
+                    
+                    # 2. Check if source and destination are different
+                    if self.source_warehouse == self.destination_warehouse:
+                        raise ValidationError("Source and destination warehouses cannot be the same")
+                    
+                    # 3. Check if the product is in the source warehouse
+                    if self.product.warehouse != self.source_warehouse:
+                        raise ValidationError(f"Product is not in the source warehouse. Current warehouse: {self.product.warehouse}")
+                    
+                    # 4. Check if there's enough quantity in the source warehouse
+                    if self.product.quantity < self.quantity:
+                        raise ValidationError(f"Not enough quantity in source warehouse. Available: {self.product.quantity}, Requested: {self.quantity}")
+                    
+                    # 5. Check if quantity is positive
+                    if self.quantity <= 0:
+                        raise ValidationError("Transfer quantity must be greater than zero")
+                    
+                    # 6. Reduce quantity from source warehouse
+                    self.product.quantity -= self.quantity
+                    if self.product.quantity < 0:
+                        raise ValidationError("Transfer would result in negative inventory in source warehouse")
+                    
+                    self.product.save()
+                    
+                    # 7. Check if product with same SKU exists in destination warehouse
+                    try:
+                        destination_product = Product.objects.filter(
+                            sku=self.product.sku,
+                            warehouse=self.destination_warehouse
+                        ).first()
+                        
+                        if destination_product:
+                            # If product exists in destination warehouse, increase its quantity
+                            destination_product.quantity += self.quantity
+                            destination_product.save()
+                        else:
+                            # Create a new product entry for the destination warehouse
+                            try:
+                                new_product = Product.objects.create(
+                                    name=self.product.name,
+                                    sku=self.product.sku,
+                                    category=self.product.category,
+                                    description=self.product.description,
+                                    buying_price=self.product.buying_price,
+                                    selling_price=self.product.selling_price,
+                                    unit_of_measure=self.product.unit_of_measure,
+                                    quantity=self.quantity,
+                                    reorder_level=self.product.reorder_level,
+                                    shipment_number=self.product.shipment_number,
+                                    location=self.product.location,
+                                    warehouse=self.destination_warehouse,
+                                    expiry_date=self.product.expiry_date,
+                                    supplier=self.product.supplier
+                                )
+                            except Exception as e:
+                                # Rollback the quantity reduction in source warehouse if destination creation fails
+                                self.product.quantity += self.quantity
+                                self.product.save()
+                                raise ValidationError(f"Failed to create product in destination warehouse: {str(e)}")
+                    except Exception as e:
+                        # Rollback the quantity reduction in source warehouse if any error occurs
+                        self.product.quantity += self.quantity
+                        self.product.save()
+                        raise ValidationError(f"Error during warehouse transfer: {str(e)}")
+                
+                except ValidationError as e:
+                    # Re-raise ValidationError with the specific error message
+                    raise ValidationError(f"Warehouse transfer failed: {str(e)}")
+                except Exception as e:
+                    # Catch any other exceptions and provide a meaningful error message
+                    raise ValidationError(f"Unexpected error during warehouse transfer: {str(e)}")
         
         # Auto-generate invoice for new outgoing transactions with clients
         if is_new and self.transaction_type == 'out' and self.client:
@@ -428,7 +519,7 @@ class Invoice(models.Model):
 class InvoiceItem(models.Model):
     invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name='items')
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    quantity = models.IntegerField()
+    quantity = models.DecimalField(max_digits=10, decimal_places=3)
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
     

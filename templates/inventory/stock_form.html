@@ -79,9 +79,26 @@
             
             {% if form.non_field_errors %}
             <div class="alert alert-danger">
+                <h5><i class="fas fa-exclamation-triangle"></i> Error</h5>
                 {% for error in form.non_field_errors %}
                 {{ error }}
                 {% endfor %}
+            </div>
+            {% endif %}
+            
+            <!-- Warehouse Transfer Error Alert -->
+            {% if 'warehouse transfer' in form.non_field_errors.0|lower %}
+            <div class="alert alert-warning">
+                <h5><i class="fas fa-exchange-alt"></i> Warehouse Transfer Error</h5>
+                <p>{{ form.non_field_errors.0 }}</p>
+                <hr>
+                <p class="mb-0">Please check the following:</p>
+                <ul>
+                    <li>Source and destination warehouses are different</li>
+                    <li>The product is in the source warehouse</li>
+                    <li>There is enough quantity available in the source warehouse</li>
+                    <li>The quantity to transfer is greater than zero</li>
+                </ul>
             </div>
             {% endif %}
             

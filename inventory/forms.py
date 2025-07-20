@@ -16,8 +16,8 @@ class ProductForm(forms.ModelForm):
             'buying_price': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
             'selling_price': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
             'unit_of_measure': forms.TextInput(attrs={'class': 'form-control'}),
-            'quantity': forms.NumberInput(attrs={'class': 'form-control'}),
-            'reorder_level': forms.NumberInput(attrs={'class': 'form-control'}),
+            'quantity': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.001'}),
+            'reorder_level': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.001'}),
             'shipment_number': forms.TextInput(attrs={'class': 'form-control'}),
             'warehouse': forms.Select(attrs={'class': 'form-select'}),
             'expiry_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
@@ -101,7 +101,7 @@ class StockTransactionForm(forms.ModelForm):
         widgets = {
             'product': forms.Select(attrs={'class': 'form-select'}),
             'transaction_type': forms.Select(attrs={'class': 'form-select', 'onchange': 'updateFormFields()'}),
-            'quantity': forms.NumberInput(attrs={'class': 'form-control'}),
+            'quantity': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.001'}),
             'buying_price': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
             'selling_price': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
             'wastage_amount': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
@@ -171,6 +171,7 @@ class StockTransactionForm(forms.ModelForm):
         if transaction_type == 'transfer':
             source = cleaned_data.get('source_warehouse')
             destination = cleaned_data.get('destination_warehouse')
+            quantity = cleaned_data.get('quantity', 0)
             
             if not source:
                 self.add_error('source_warehouse', 'Source warehouse is required for transfers')
@@ -180,6 +181,18 @@ class StockTransactionForm(forms.ModelForm):
                 
             if source and destination and source == destination:
                 self.add_error('destination_warehouse', 'Source and destination warehouses cannot be the same')
+            
+            # Validate quantity is positive
+            if quantity <= 0:
+                self.add_error('quantity', 'Transfer quantity must be greater than zero')
+                
+            # Check if product is in source warehouse
+            if product and source and product.warehouse != source:
+                self.add_error('source_warehouse', f'Product is not in the source warehouse. Current warehouse: {product.warehouse}')
+                
+            # Check if there's enough quantity
+            if product and quantity > product.quantity:
+                self.add_error('quantity', f'Not enough quantity in source warehouse. Available: {product.quantity}, Requested: {quantity}')
         
         # For stock in, destination warehouse is required
         if transaction_type == 'in' and not cleaned_data.get('destination_warehouse'):
@@ -290,7 +303,7 @@ class InvoiceItemForm(forms.ModelForm):
         fields = ['product', 'quantity', 'unit_price']
         widgets = {
             'product': forms.Select(attrs={'class': 'form-select'}),
-            'quantity': forms.NumberInput(attrs={'class': 'form-control'}),
+            'quantity': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.001'}),
             'unit_price': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
         }
 

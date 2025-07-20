@@ -13,6 +13,7 @@ from django.urls import reverse
 from urllib.parse import urlencode
 from django.views.decorators.http import require_POST
 import uuid
+from django.core.exceptions import ValidationError
 
 from .models import Product, Category, Supplier, Client, StockTransaction, Invoice, Warehouse, Payment
 from .forms import (
@@ -785,22 +786,48 @@ def stock_create(request):
                 else:
                     transaction.unit_price = transaction.buying_price
             
-            transaction.save()
-            
-            # Check if an invoice was automatically generated
-            if transaction.transaction_type == 'out' and transaction.client:
-                invoice = transaction.generate_invoice()
-                if invoice:
-                    messages.success(
-                        request, 
-                        f'Stock transaction created successfully. An invoice (#{invoice.invoice_number}) has been automatically generated.'
-                    )
+            try:
+                transaction.save()
+                
+                # Check if an invoice was automatically generated
+                if transaction.transaction_type == 'out' and transaction.client:
+                    invoice = transaction.generate_invoice()
+                    if invoice:
+                        messages.success(
+                            request, 
+                            f'Stock transaction created successfully. An invoice (#{invoice.invoice_number}) has been automatically generated.'
+                        )
+                    else:
+                        messages.success(request, f'Stock transaction created successfully.')
                 else:
                     messages.success(request, f'Stock transaction created successfully.')
-            else:
-                messages.success(request, f'Stock transaction created successfully.')
+                    
+                return redirect('stock')
+            except ValidationError as e:
+                # Handle validation errors from the model
+                error_message = str(e)
+                messages.error(request, error_message)
                 
-            return redirect('stock')
+                # Add the error to the appropriate form field if possible
+                if "source warehouse" in error_message.lower():
+                    form.add_error('source_warehouse', error_message)
+                elif "destination warehouse" in error_message.lower():
+                    form.add_error('destination_warehouse', error_message)
+                elif "quantity" in error_message.lower():
+                    form.add_error('quantity', error_message)
+                else:
+                    # Add as a general form error
+                    form.add_error(None, error_message)
+            except ValueError as e:
+                # Handle ValueError (for backward compatibility)
+                error_message = str(e)
+                messages.error(request, f'Error: {error_message}')
+                form.add_error(None, error_message)
+            except Exception as e:
+                # Handle unexpected errors
+                error_message = f'An unexpected error occurred: {str(e)}'
+                messages.error(request, error_message)
+                form.add_error(None, error_message)
     else:
         form = StockTransactionForm(initial={'transaction_date': timezone.now()})
     
