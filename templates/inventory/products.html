@@ -252,15 +252,46 @@
         </li>
         {% endif %}
         
+        <!-- First page -->
+        {% if products.number > 3 %}
+        <li class="page-item">
+            <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if category_id %}&category={{ category_id }}{% endif %}{% if warehouse_id %}&warehouse={{ warehouse_id }}{% endif %}{% if low_stock %}&low_stock=true{% endif %}">1</a>
+        </li>
+        {% endif %}
+        
+        <!-- Ellipsis for skipped pages at the beginning -->
+        {% if products.number > 4 %}
+        <li class="page-item disabled">
+            <span class="page-link">...</span>
+        </li>
+        {% endif %}
+        
+        <!-- Pages around current page -->
         {% for i in products.paginator.page_range %}
-            {% if products.number == i %}
-            <li class="page-item active"><span class="page-link">{{ i }}</span></li>
-            {% else %}
-            <li class="page-item">
-                <a class="page-link" href="?page={{ i }}{% if search_query %}&search={{ search_query }}{% endif %}{% if category_id %}&category={{ category_id }}{% endif %}{% if warehouse_id %}&warehouse={{ warehouse_id }}{% endif %}{% if low_stock %}&low_stock=true{% endif %}">{{ i }}</a>
-            </li>
+            {% if products.number|add:'-2' <= i and i <= products.number|add:'2' %}
+                {% if products.number == i %}
+                <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+                {% else %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ i }}{% if search_query %}&search={{ search_query }}{% endif %}{% if category_id %}&category={{ category_id }}{% endif %}{% if warehouse_id %}&warehouse={{ warehouse_id }}{% endif %}{% if low_stock %}&low_stock=true{% endif %}">{{ i }}</a>
+                </li>
+                {% endif %}
             {% endif %}
         {% endfor %}
+        
+        <!-- Ellipsis for skipped pages at the end -->
+        {% if products.number < products.paginator.num_pages|add:'-3' %}
+        <li class="page-item disabled">
+            <span class="page-link">...</span>
+        </li>
+        {% endif %}
+        
+        <!-- Last page -->
+        {% if products.number < products.paginator.num_pages|add:'-2' %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ products.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if category_id %}&category={{ category_id }}{% endif %}{% if warehouse_id %}&warehouse={{ warehouse_id }}{% endif %}{% if low_stock %}&low_stock=true{% endif %}">{{ products.paginator.num_pages }}</a>
+        </li>
+        {% endif %}
         
         {% if products.has_next %}
         <li class="page-item">
@@ -275,6 +306,23 @@
         {% endif %}
     </ul>
 </nav>
+
+<!-- Page Jump Form for large number of pages -->
+{% if products.paginator.num_pages > 7 %}
+<div class="d-flex justify-content-center mt-2">
+    <form class="d-flex align-items-center" method="get">
+        {% if search_query %}<input type="hidden" name="search" value="{{ search_query }}">{% endif %}
+        {% if category_id %}<input type="hidden" name="category" value="{{ category_id }}">{% endif %}
+        {% if warehouse_id %}<input type="hidden" name="warehouse" value="{{ warehouse_id }}">{% endif %}
+        {% if low_stock %}<input type="hidden" name="low_stock" value="true">{% endif %}
+        
+        <label for="pageJump" class="me-2">Jump to page:</label>
+        <input type="number" id="pageJump" name="page" class="form-control form-control-sm me-2" style="width: 70px;" min="1" max="{{ products.paginator.num_pages }}" value="{{ products.number }}">
+        <button type="submit" class="btn btn-sm btn-primary">Go</button>
+        <span class="ms-2 text-muted">of {{ products.paginator.num_pages }}</span>
+    </form>
+</div>
+{% endif %}
 {% endif %}
 {% endif %}
 {% endif %}
