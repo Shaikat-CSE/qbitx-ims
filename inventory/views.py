@@ -367,6 +367,12 @@ def products(request):
     page = request.GET.get('page')
     products = paginator.get_page(page)
     
+    # Calculate totals for all filtered products (not just the current page)
+    total_quantity = products_list.aggregate(total=Sum('quantity'))['total'] or 0
+    total_inventory_value = products_list.aggregate(
+        total=Sum(ExpressionWrapper(F('quantity') * F('buying_price'), output_field=DecimalField()))
+    )['total'] or 0
+    
     context = {
         'products': products,
         'categories': categories,
@@ -376,6 +382,8 @@ def products(request):
         'search_query': search_query,
         'low_stock': low_stock == 'true',
         'search_performed': search_performed,
+        'total_quantity': total_quantity,
+        'total_inventory_value': total_inventory_value,
     }
     
     return render(request, 'inventory/products.html', context)
@@ -1616,6 +1624,148 @@ def reports(request):
             'grouped_data': grouped_data,
         })
     
+    elif report_type == 'product_history':
+        # Product History Report - Shows comprehensive history of a single product
+        if not product_id:
+            # This report type requires a product to be selected
+            context.update({
+                'report_title': 'Product History Report',
+                'report_subtitle': 'Please select a product to view its complete history',
+                'show_product_selection': True,
+            })
+        else:
+            # Get the selected product
+            product = get_object_or_404(Product, id=product_id)
+            
+            # Define the date range
+            if not start_date:
+                # Default to all time if not specified
+                start_date_obj = product.created_at.date() - timedelta(days=1)
+                start_date = start_date_obj.strftime('%Y-%m-%d')
+            if not end_date:
+                end_date_obj = today
+                end_date = end_date_obj.strftime('%Y-%m-%d')
+            
+            # Get all stock transactions for this product
+            stock_transactions = StockTransaction.objects.filter(
+                product=product,
+                transaction_date__date__gte=start_date_obj,
+                transaction_date__date__lte=end_date_obj
+            ).order_by('-transaction_date')
+            
+            # Get purchase transactions (stock in)
+            purchases = stock_transactions.filter(transaction_type='in')
+            total_purchases = purchases.aggregate(
+                total_quantity=Sum('quantity'),
+                total_value=Sum('total_price')
+            )
+            
+            # Get sales transactions (stock out)
+            sales = stock_transactions.filter(transaction_type='out')
+            total_sales = sales.aggregate(
+                total_quantity=Sum('quantity'),
+                total_value=Sum('total_price'),
+                total_profit=Sum('profit_loss')
+            )
+            
+            # Get wastage transactions
+            wastage = stock_transactions.filter(transaction_type='wastage')
+            total_wastage = wastage.aggregate(
+                total_quantity=Sum('quantity'),
+                total_value=Sum('total_price')
+            )
+            
+            # Get return transactions
+            returns = stock_transactions.filter(transaction_type='return')
+            total_returns = returns.aggregate(
+                total_quantity=Sum('quantity'),
+                total_value=Sum('total_price')
+            )
+            
+            # Get transfer transactions
+            transfers = stock_transactions.filter(transaction_type='transfer')
+            total_transfers = transfers.aggregate(
+                total_quantity=Sum('quantity')
+            )
+            
+            # Get all payments related to this product's transactions
+            payments = Payment.objects.filter(
+                transaction__in=stock_transactions,
+                payment_date__gte=start_date_obj,
+                payment_date__lte=end_date_obj
+            ).order_by('-payment_date')
+            
+            # Get all invoices related to this product
+            invoices = Invoice.objects.filter(
+                items__product=product,
+                issue_date__gte=start_date_obj,
+                issue_date__lte=end_date_obj
+            ).distinct().order_by('-issue_date')
+            
+            # Calculate key metrics
+            current_quantity = product.quantity
+            inventory_value = product.quantity * product.buying_price
+            
+            # Calculate quantity changes over time
+            quantity_changes = []
+            running_quantity = current_quantity
+            
+            # Sort all transactions by date (newest first)
+            all_transactions = list(stock_transactions)
+            all_transactions.sort(key=lambda x: x.transaction_date, reverse=True)
+            
+            for transaction in all_transactions:
+                # Calculate the quantity before this transaction
+                if transaction.transaction_type in ['in', 'return']:
+                    # For incoming transactions, subtract the quantity to get previous value
+                    previous_quantity = running_quantity - transaction.quantity
+                elif transaction.transaction_type in ['out', 'wastage']:
+                    # For outgoing transactions, add the quantity to get previous value
+                    previous_quantity = running_quantity + transaction.quantity
+                else:
+                    # For transfers, it depends on whether this product was source or destination
+                    if transaction.source_warehouse == product.warehouse:
+                        previous_quantity = running_quantity + transaction.quantity
+                    else:
+                        previous_quantity = running_quantity - transaction.quantity
+                
+                # Record this change
+                quantity_changes.append({
+                    'date': transaction.transaction_date,
+                    'transaction_id': transaction.transaction_id,
+                    'transaction_type': transaction.get_transaction_type_display(),
+                    'previous_quantity': previous_quantity,
+                    'change': transaction.quantity,
+                    'new_quantity': running_quantity
+                })
+                
+                # Update running quantity for next iteration
+                running_quantity = previous_quantity
+            
+            context.update({
+                'report_title': 'Product History Report',
+                'report_subtitle': f'Complete history for {product.name}',
+                'product': product,
+                'stock_transactions': stock_transactions,
+                'purchases': purchases,
+                'sales': sales,
+                'wastage': wastage,
+                'returns': returns,
+                'transfers': transfers,
+                'payments': payments,
+                'invoices': invoices,
+                'total_purchases': total_purchases,
+                'total_sales': total_sales,
+                'total_wastage': total_wastage,
+                'total_returns': total_returns,
+                'total_transfers': total_transfers,
+                'current_quantity': current_quantity,
+                'inventory_value': inventory_value,
+                'quantity_changes': quantity_changes,
+                'start_date': start_date,
+                'end_date': end_date,
+            })
+    
     else:
         context = {
             'report_type': 'unknown',
@@ -2302,6 +2452,148 @@ def generate_report_pdf(request, report_type):
             'total_payments': total_payments,
             'grouped_data': grouped_data,
         })
+    
+    elif report_type == 'product_history':
+        # Product History Report - Shows comprehensive history of a single product
+        if not product_id:
+            # This report type requires a product to be selected
+            context.update({
+                'report_title': 'Product History Report',
+                'report_subtitle': 'Please select a product to view its complete history',
+                'show_product_selection': True,
+            })
+        else:
+            # Get the selected product
+            product = get_object_or_404(Product, id=product_id)
+            
+            # Define the date range
+            if not start_date:
+                # Default to all time if not specified
+                start_date_obj = product.created_at.date() - timedelta(days=1)
+                start_date = start_date_obj.strftime('%Y-%m-%d')
+            if not end_date:
+                end_date_obj = today
+                end_date = end_date_obj.strftime('%Y-%m-%d')
+            
+            # Get all stock transactions for this product
+            stock_transactions = StockTransaction.objects.filter(
+                product=product,
+                transaction_date__date__gte=start_date_obj,
+                transaction_date__date__lte=end_date_obj
+            ).order_by('-transaction_date')
+            
+            # Get purchase transactions (stock in)
+            purchases = stock_transactions.filter(transaction_type='in')
+            total_purchases = purchases.aggregate(
+                total_quantity=Sum('quantity'),
+                total_value=Sum('total_price')
+            )
+            
+            # Get sales transactions (stock out)
+            sales = stock_transactions.filter(transaction_type='out')
+            total_sales = sales.aggregate(
+                total_quantity=Sum('quantity'),
+                total_value=Sum('total_price'),
+                total_profit=Sum('profit_loss')
+            )
+            
+            # Get wastage transactions
+            wastage = stock_transactions.filter(transaction_type='wastage')
+            total_wastage = wastage.aggregate(
+                total_quantity=Sum('quantity'),
+                total_value=Sum('total_price')
+            )
+            
+            # Get return transactions
+            returns = stock_transactions.filter(transaction_type='return')
+            total_returns = returns.aggregate(
+                total_quantity=Sum('quantity'),
+                total_value=Sum('total_price')
+            )
+            
+            # Get transfer transactions
+            transfers = stock_transactions.filter(transaction_type='transfer')
+            total_transfers = transfers.aggregate(
+                total_quantity=Sum('quantity')
+            )
+            
+            # Get all payments related to this product's transactions
+            payments = Payment.objects.filter(
+                transaction__in=stock_transactions,
+                payment_date__gte=start_date_obj,
+                payment_date__lte=end_date_obj
+            ).order_by('-payment_date')
+            
+            # Get all invoices related to this product
+            invoices = Invoice.objects.filter(
+                items__product=product,
+                issue_date__gte=start_date_obj,
+                issue_date__lte=end_date_obj
+            ).distinct().order_by('-issue_date')
+            
+            # Calculate key metrics
+            current_quantity = product.quantity
+            inventory_value = product.quantity * product.buying_price
+            
+            # Calculate quantity changes over time
+            quantity_changes = []
+            running_quantity = current_quantity
+            
+            # Sort all transactions by date (newest first)
+            all_transactions = list(stock_transactions)
+            all_transactions.sort(key=lambda x: x.transaction_date, reverse=True)
+            
+            for transaction in all_transactions:
+                # Calculate the quantity before this transaction
+                if transaction.transaction_type in ['in', 'return']:
+                    # For incoming transactions, subtract the quantity to get previous value
+                    previous_quantity = running_quantity - transaction.quantity
+                elif transaction.transaction_type in ['out', 'wastage']:
+                    # For outgoing transactions, add the quantity to get previous value
+                    previous_quantity = running_quantity + transaction.quantity
+                else:
+                    # For transfers, it depends on whether this product was source or destination
+                    if transaction.source_warehouse == product.warehouse:
+                        previous_quantity = running_quantity + transaction.quantity
+                    else:
+                        previous_quantity = running_quantity - transaction.quantity
+                
+                # Record this change
+                quantity_changes.append({
+                    'date': transaction.transaction_date,
+                    'transaction_id': transaction.transaction_id,
+                    'transaction_type': transaction.get_transaction_type_display(),
+                    'previous_quantity': previous_quantity,
+                    'change': transaction.quantity,
+                    'new_quantity': running_quantity
+                })
+                
+                # Update running quantity for next iteration
+                running_quantity = previous_quantity
+            
+            context.update({
+                'report_title': 'Product History Report',
+                'report_subtitle': f'Complete history for {product.name}',
+                'product': product,
+                'stock_transactions': stock_transactions,
+                'purchases': purchases,
+                'sales': sales,
+                'wastage': wastage,
+                'returns': returns,
+                'transfers': transfers,
+                'payments': payments,
+                'invoices': invoices,
+                'total_purchases': total_purchases,
+                'total_sales': total_sales,
+                'total_wastage': total_wastage,
+                'total_returns': total_returns,
+                'total_transfers': total_transfers,
+                'current_quantity': current_quantity,
+                'inventory_value': inventory_value,
+                'quantity_changes': quantity_changes,
+                'start_date': start_date,
+                'end_date': end_date,
+            })
     
     # Generate the PDF using the context
     pdf = render_to_pdf('inventory/pdf/report_pdf.html', context)

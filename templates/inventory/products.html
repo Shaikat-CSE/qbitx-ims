@@ -131,6 +131,50 @@
 </div>
 {% else %}
 <!-- Products Table -->
+<div class="row mb-3">
+    <div class="col-md-12">
+        <div class="card bg-light">
+            <div class="card-body py-2">
+                <div class="row align-items-center">
+                    <div class="col-md-4">
+                        <div class="d-flex align-items-center">
+                            <div class="me-3">
+                                <i class="fas fa-boxes text-primary fa-2x"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0">Total Products</h6>
+                                <h4 class="mb-0">{{ products.paginator.count }}</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="d-flex align-items-center">
+                            <div class="me-3">
+                                <i class="fas fa-cubes text-success fa-2x"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0">Total Quantity</h6>
+                                <h4 class="mb-0">{{ total_quantity|floatformat:-3 }}</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="d-flex align-items-center">
+                            <div class="me-3">
+                                <i class="fas fa-money-bill-wave text-warning fa-2x"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0">Inventory Value</h6>
+                                <h4 class="mb-0">৳ {{ total_inventory_value|floatformat:-2 }}</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="card">
     <div class="card-body">
         <div class="table-responsive-xl">
@@ -178,6 +222,14 @@
                         </td>
                     </tr>
                     {% endfor %}
+                    <!-- Summary row with totals -->
+                    <tr class="table-primary fw-bold">
+                        <td colspan="3" class="text-end">Total:</td>
+                        <td>{{ total_quantity|floatformat:-3 }}</td>
+                        <td>Various</td>
+                        <td colspan="2" class="text-end">Inventory Value:</td>
+                        <td colspan="4">৳ {{ total_inventory_value|floatformat:-2 }}</td>
+                    </tr>
                 </tbody>
             </table>
         </div>
