@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.db.models import Sum, F, ExpressionWrapper, DecimalField, Q, Count
+from django.db.models import Sum, F, ExpressionWrapper, DecimalField, Q, Count, IntegerField
 from django.db.models.functions import Coalesce
 from django.core.paginator import Paginator
 from django.http import JsonResponse, HttpResponse
@@ -666,7 +666,9 @@ def stock(request):
     end_date = request.GET.get('end_date', '')
     search_query = request.GET.get('search', '')
     
-    transactions_list = StockTransaction.objects.all().order_by('-transaction_date')
+    transactions_list = StockTransaction.objects.select_related(
+        'product', 'supplier', 'client', 'source_warehouse', 'destination_warehouse'
+    ).all().order_by('-transaction_date')
     
     # Apply filters
     if transaction_type:
@@ -956,40 +958,161 @@ def reports(request):
     # Generate report based on type
     if report_type == 'inventory':
         # Inventory value report
-        products = Product.objects.all()
-        
-        # Apply filters
+        products = Product.objects.all().order_by('name')
         if product_id:
             products = products.filter(id=product_id)
         if category_id:
             products = products.filter(category_id=category_id)
         if supplier_id:
             products = products.filter(supplier_id=supplier_id)
-        
-        # Apply sorting
-        if sort_by == 'quantity_desc':
-            products = products.order_by('-quantity')
-        elif sort_by == 'quantity_asc':
-            products = products.order_by('quantity')
-        elif sort_by == 'price_desc':
-            products = products.order_by('-buying_price')
-        elif sort_by == 'price_asc':
-            products = products.order_by('buying_price')
-        else:
-            products = products.order_by('name')  # Default sort
-        
-        # Calculate total value for each product
+
+        # Calculate stock movements for each product within the date range
+        # and opening stock before the start_date
+
+        report_data = []
         for product in products:
-            product.total_value = product.quantity * product.buying_price
-        
-        total_value = sum(p.total_value for p in products)
-        total_quantity = sum(p.quantity for p in products)
+            # Calculate opening stock
+            # Stock In before start_date
+            opening_purchases = StockTransaction.objects.filter(
+                product=product,
+                transaction_type='in',
+                transaction_date__date__lt=start_date_obj
+            ).aggregate(total_quantity=Coalesce(Sum('quantity'), 0, output_field=IntegerField()))['total_quantity']
+
+            # Stock Out (Sales) before start_date
+            opening_sales = StockTransaction.objects.filter(
+                product=product,
+                transaction_type='out',
+                transaction_date__date__lt=start_date_obj
+            ).aggregate(total_quantity=Coalesce(Sum('quantity'), 0, output_field=IntegerField()))['total_quantity']
+
+            # Wastage before start_date
+            opening_wastage = StockTransaction.objects.filter(
+                product=product,
+                transaction_type='wastage',
+                transaction_date__date__lt=start_date_obj
+            ).aggregate(total_quantity=Coalesce(Sum('quantity'), 0, output_field=IntegerField()))['total_quantity']
+
+            # Opening stock based on historical transactions (or current quantity if no transactions history before start date)
+            # This assumes current quantity is the most accurate for "now", and we're calculating historical opening stock
+            # If the goal is strictly based on transactions, then:
+            # calculated_opening_stock = opening_purchases - opening_sales - opening_wastage
+            # However, a more practical approach for "opening stock" in a period is to use the actual stock at the start of that period.
+            # Since `product.quantity` is the current quantity, we need to adjust it to the `start_date_obj`.
+
+            # To get the quantity at start_date_obj:
+            # Current Quantity (product.quantity)
+            # - Purchases from start_date_obj to today
+            # + Sales from start_date_obj to today
+            # + Wastage from start_date_obj to today
+
+            # Calculate transactions from start_date to today for the specific product
+            transactions_since_start_date = StockTransaction.objects.filter(
+                product=product,
+                transaction_date__date__gte=start_date_obj,
+                transaction_date__date__lte=today # up to today's current stock
+            )
+
+            purchases_since_start = transactions_since_start_date.filter(
+                transaction_type='in'
+            ).aggregate(total_quantity=Coalesce(Sum('quantity'), 0, output_field=IntegerField()))['total_quantity']
+
+            sales_since_start = transactions_since_start_date.filter(
+                transaction_type='out'
+            ).aggregate(total_quantity=Coalesce(Sum('quantity'), 0, output_field=IntegerField()))['total_quantity']
+
+            wastage_since_start = transactions_since_start_date.filter(
+                transaction_type='wastage'
+            ).aggregate(total_quantity=Coalesce(Sum('quantity'), 0, output_field=IntegerField()))['total_quantity']
+
+            # This is the current quantity of the product
+            current_product_quantity = product.quantity
+
+            # Calculate opening stock for the specified report period
+            # Opening Stock = Current Stock - Purchases_in_period + Sales_in_period + Wastage_in_period
+            # This reverses the transactions within the report period to get the stock at the beginning of the period.
+            calculated_opening_stock = current_product_quantity - purchases_since_start + sales_since_start + wastage_since_start
+
+            # Ensure opening stock does not go below zero, if quantity cannot be negative
+            if calculated_opening_stock < 0:
+                calculated_opening_stock = 0
+
+            # Calculate purchase stock within the date range
+            purchase_stock_in_period = StockTransaction.objects.filter(
+                product=product,
+                transaction_type='in',
+                transaction_date__date__gte=start_date_obj,
+                transaction_date__date__lte=end_date_obj
+            ).aggregate(total_quantity=Coalesce(Sum('quantity'), 0, output_field=IntegerField()))['total_quantity']
+
+            # Calculate sale stock within the date range
+            sale_stock_in_period = StockTransaction.objects.filter(
+                product=product,
+                transaction_type='out',
+                transaction_date__date__gte=start_date_obj,
+                transaction_date__date__lte=end_date_obj
+            ).aggregate(total_quantity=Coalesce(Sum('quantity'), 0, output_field=IntegerField()))['total_quantity']
+
+            # Calculate wastage stock within the date range
+            wastage_stock_in_period = StockTransaction.objects.filter(
+                product=product,
+                transaction_type='wastage',
+                transaction_date__date__gte=start_date_obj,
+                transaction_date__date__lte=end_date_obj
+            ).aggregate(total_quantity=Coalesce(Sum('quantity'), 0, output_field=IntegerField()))['total_quantity']
+
+            # Total Stock (Opening + Purchase)
+            total_stock = calculated_opening_stock + purchase_stock_in_period
+
+            # Closing Stock (Opening + Purchase - Sale - Wastage)
+            closing_stock = total_stock - sale_stock_in_period - wastage_stock_in_period
+
+            # Ensure closing stock does not go below zero
+            if closing_stock < 0:
+                closing_stock = 0
+
+            report_data.append({
+                'product_name': product.name,
+                'sku': product.sku,
+                'category': product.category.name if product.category else 'N/A',
+                'supplier': product.supplier.name if product.supplier else 'N/A',
+                'opening_stock': calculated_opening_stock,
+                'purchase_stock': purchase_stock_in_period,
+                'sale_stock': sale_stock_in_period,
+                'wastage_stock': wastage_stock_in_period,
+                'total_stock': total_stock,
+                'closing_stock': closing_stock,
+            })
+
+        # Apply sorting to report_data
+        if sort_by == 'quantity_desc':
+            report_data.sort(key=lambda x: x['closing_stock'], reverse=True)
+        elif sort_by == 'quantity_asc':
+            report_data.sort(key=lambda x: x['closing_stock'])
+        elif sort_by == 'product_asc': # New sort option for product name
+            report_data.sort(key=lambda x: x['product_name'])
+        elif sort_by == 'product_desc': # New sort option for product name
+            report_data.sort(key=lambda x: x['product_name'], reverse=True)
+        else:
+            report_data.sort(key=lambda x: x['product_name']) # Default sort by product name
+
+        # Calculate overall totals
+        overall_total_opening_stock = sum(item['opening_stock'] for item in report_data)
+        overall_total_purchase_stock = sum(item['purchase_stock'] for item in report_data)
+        overall_total_sale_stock = sum(item['sale_stock'] for item in report_data)
+        overall_total_wastage_stock = sum(item['wastage_stock'] for item in report_data)
+        overall_total_stock = sum(item['total_stock'] for item in report_data)
+        overall_total_closing_stock = sum(item['closing_stock'] for item in report_data)
         
         context.update({
-            'report_title': 'Inventory Value Report',
-            'products': products,
-            'total_value': total_value,
-            'total_quantity': total_quantity,
+            'report_title': 'Inventory Stock Movement Report',
+            'report_data': report_data,
+            'overall_total_opening_stock': overall_total_opening_stock,
+            'overall_total_purchase_stock': overall_total_purchase_stock,
+            'overall_total_sale_stock': overall_total_sale_stock,
+            'overall_total_wastage_stock': overall_total_wastage_stock,
+            'overall_total_stock': overall_total_stock,
+            'overall_total_closing_stock': overall_total_closing_stock,
         })
     
     elif report_type == 'sales':
@@ -1903,39 +2026,161 @@ def generate_report_pdf(request, report_type):
     # Generate report data based on type
     if report_type == 'inventory':
         # Inventory value report
-        products = Product.objects.all()
-        
-        # Apply filters
+        products = Product.objects.all().order_by('name')
         if product_id:
             products = products.filter(id=product_id)
         if category_id:
             products = products.filter(category_id=category_id)
         if supplier_id:
             products = products.filter(supplier_id=supplier_id)
-        
-        # Apply sorting
-        if sort_by == 'quantity_desc':
-            products = products.order_by('-quantity')
-        elif sort_by == 'quantity_asc':
-            products = products.order_by('quantity')
-        elif sort_by == 'price_desc':
-            products = products.order_by('-buying_price')
-        elif sort_by == 'price_asc':
-            products = products.order_by('buying_price')
-        else:
-            products = products.order_by('name')  # Default sort
-        
-        # Calculate total value for each product
+
+        # Calculate stock movements for each product within the date range
+        # and opening stock before the start_date
+
+        report_data = []
         for product in products:
-            product.total_value = product.quantity * product.buying_price
-        
-        total_value = sum(p.total_value for p in products)
-        total_quantity = sum(p.quantity for p in products)
+            # Calculate opening stock
+            # Stock In before start_date
+            opening_purchases = StockTransaction.objects.filter(
+                product=product,
+                transaction_type='in',
+                transaction_date__date__lt=start_date_obj
+            ).aggregate(total_quantity=Coalesce(Sum('quantity'), 0, output_field=IntegerField()))['total_quantity']
+
+            # Stock Out (Sales) before start_date
+            opening_sales = StockTransaction.objects.filter(
+                product=product,
+                transaction_type='out',
+                transaction_date__date__lt=start_date_obj
+            ).aggregate(total_quantity=Coalesce(Sum('quantity'), 0, output_field=IntegerField()))['total_quantity']
+
+            # Wastage before start_date
+            opening_wastage = StockTransaction.objects.filter(
+                product=product,
+                transaction_type='wastage',
+                transaction_date__date__lt=start_date_obj
+            ).aggregate(total_quantity=Coalesce(Sum('quantity'), 0, output_field=IntegerField()))['total_quantity']
+
+            # Opening stock based on historical transactions (or current quantity if no transactions history before start date)
+            # This assumes current quantity is the most accurate for "now", and we're calculating historical opening stock
+            # If the goal is strictly based on transactions, then:
+            # calculated_opening_stock = opening_purchases - opening_sales - opening_wastage
+            # However, a more practical approach for "opening stock" in a period is to use the actual stock at the start of that period.
+            # Since `product.quantity` is the current quantity, we need to adjust it to the `start_date_obj`.
+
+            # To get the quantity at start_date_obj:
+            # Current Quantity (product.quantity)
+            # - Purchases from start_date_obj to today
+            # + Sales from start_date_obj to today
+            # + Wastage from start_date_obj to today
+
+            # Calculate transactions from start_date to today for the specific product
+            transactions_since_start_date = StockTransaction.objects.filter(
+                product=product,
+                transaction_date__date__gte=start_date_obj,
+                transaction_date__date__lte=today # up to today's current stock
+            )
+
+            purchases_since_start = transactions_since_start_date.filter(
+                transaction_type='in'
+            ).aggregate(total_quantity=Coalesce(Sum('quantity'), 0, output_field=IntegerField()))['total_quantity']
+
+            sales_since_start = transactions_since_start_date.filter(
+                transaction_type='out'
+            ).aggregate(total_quantity=Coalesce(Sum('quantity'), 0, output_field=IntegerField()))['total_quantity']
+
+            wastage_since_start = transactions_since_start_date.filter(
+                transaction_type='wastage'
+            ).aggregate(total_quantity=Coalesce(Sum('quantity'), 0, output_field=IntegerField()))['total_quantity']
+
+            # This is the current quantity of the product
+            current_product_quantity = product.quantity
+
+            # Calculate opening stock for the specified report period
+            # Opening Stock = Current Stock - Purchases_in_period + Sales_in_period + Wastage_in_period
+            # This reverses the transactions within the report period to get the stock at the beginning of the period.
+            calculated_opening_stock = current_product_quantity - purchases_since_start + sales_since_start + wastage_since_start
+
+            # Ensure opening stock does not go below zero, if quantity cannot be negative
+            if calculated_opening_stock < 0:
+                calculated_opening_stock = 0
+
+            # Calculate purchase stock within the date range
+            purchase_stock_in_period = StockTransaction.objects.filter(
+                product=product,
+                transaction_type='in',
+                transaction_date__date__gte=start_date_obj,
+                transaction_date__date__lte=end_date_obj
+            ).aggregate(total_quantity=Coalesce(Sum('quantity'), 0, output_field=IntegerField()))['total_quantity']
+
+            # Calculate sale stock within the date range
+            sale_stock_in_period = StockTransaction.objects.filter(
+                product=product,
+                transaction_type='out',
+                transaction_date__date__gte=start_date_obj,
+                transaction_date__date__lte=end_date_obj
+            ).aggregate(total_quantity=Coalesce(Sum('quantity'), 0, output_field=IntegerField()))['total_quantity']
+
+            # Calculate wastage stock within the date range
+            wastage_stock_in_period = StockTransaction.objects.filter(
+                product=product,
+                transaction_type='wastage',
+                transaction_date__date__gte=start_date_obj,
+                transaction_date__date__lte=end_date_obj
+            ).aggregate(total_quantity=Coalesce(Sum('quantity'), 0, output_field=IntegerField()))['total_quantity']
+
+            # Total Stock (Opening + Purchase)
+            total_stock = calculated_opening_stock + purchase_stock_in_period
+
+            # Closing Stock (Opening + Purchase - Sale - Wastage)
+            closing_stock = total_stock - sale_stock_in_period - wastage_stock_in_period
+
+            # Ensure closing stock does not go below zero
+            if closing_stock < 0:
+                closing_stock = 0
+
+            report_data.append({
+                'product_name': product.name,
+                'sku': product.sku,
+                'category': product.category.name if product.category else 'N/A',
+                'supplier': product.supplier.name if product.supplier else 'N/A',
+                'opening_stock': calculated_opening_stock,
+                'purchase_stock': purchase_stock_in_period,
+                'sale_stock': sale_stock_in_period,
+                'wastage_stock': wastage_stock_in_period,
+                'total_stock': total_stock,
+                'closing_stock': closing_stock,
+            })
+
+        # Apply sorting to report_data
+        if sort_by == 'quantity_desc':
+            report_data.sort(key=lambda x: x['closing_stock'], reverse=True)
+        elif sort_by == 'quantity_asc':
+            report_data.sort(key=lambda x: x['closing_stock'])
+        elif sort_by == 'product_asc': # New sort option for product name
+            report_data.sort(key=lambda x: x['product_name'])
+        elif sort_by == 'product_desc': # New sort option for product name
+            report_data.sort(key=lambda x: x['product_name'], reverse=True)
+        else:
+            report_data.sort(key=lambda x: x['product_name']) # Default sort by product name
+
+        # Calculate overall totals
+        overall_total_opening_stock = sum(item['opening_stock'] for item in report_data)
+        overall_total_purchase_stock = sum(item['purchase_stock'] for item in report_data)
+        overall_total_sale_stock = sum(item['sale_stock'] for item in report_data)
+        overall_total_wastage_stock = sum(item['wastage_stock'] for item in report_data)
+        overall_total_stock = sum(item['total_stock'] for item in report_data)
+        overall_total_closing_stock = sum(item['closing_stock'] for item in report_data)
         
         context.update({
-            'products': products,
-            'total_value': total_value,
-            'total_quantity': total_quantity,
+            'report_title': 'Inventory Stock Movement Report',
+            'report_data': report_data,
+            'overall_total_opening_stock': overall_total_opening_stock,
+            'overall_total_purchase_stock': overall_total_purchase_stock,
+            'overall_total_sale_stock': overall_total_sale_stock,
+            'overall_total_wastage_stock': overall_total_wastage_stock,
+            'overall_total_stock': overall_total_stock,
+            'overall_total_closing_stock': overall_total_closing_stock,
         })
     
     elif report_type == 'sales':

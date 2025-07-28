@@ -174,16 +174,24 @@ class StockTransaction(models.Model):
         return f"{prefix}-{date_str}-{count:04d}"
     
     def calculate_final_price(self):
-        """Calculate the final price after tax deductions"""
+        """Calculate the final price after VAT and AIT"""
+        from decimal import Decimal, ROUND_HALF_UP
         if not self.apply_taxes:
             return self.selling_price
-        
-        # Apply VAT deduction first
-        price_after_vat = self.selling_price * (1 - (self.vat_rate / 100))
-        
-        # Then apply AIT deduction
-        final_price = price_after_vat * (1 - (self.ait_rate / 100))
-        
+
+        vat_rate = Decimal('10')
+        ait_rate = Decimal(str(self.ait_rate))
+        product_price = Decimal(str(self.selling_price))
+
+        vat = (product_price * vat_rate / Decimal('100')).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        gross_price_inc_vat = product_price + vat
+
+        if ait_rate > 0 and ait_rate < 100:
+            ait = (gross_price_inc_vat * ait_rate / (Decimal('100') - ait_rate)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        else:
+            ait = Decimal('0.00')
+
+        final_price = (gross_price_inc_vat + ait).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
         return final_price
     
     @property

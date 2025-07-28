@@ -15,20 +15,50 @@
             line-height: 1.2;
         }
         .header {
-            text-align: center;
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+            padding: 0;
+        }
+        .header td {
+            vertical-align: top;
+            padding: 0;
+        }
+        .header-left {
+            text-align: left;
+            width: 50%;
+        }
+        .header-right {
+            text-align: right;
+            width: 50%;
+        }
+        .header-separator {
+            width: 100%;
+            border-bottom: 2px solid #a80000;
+            display: block;
             margin-bottom: 15px;
         }
         .company-name {
             font-size: 18pt;
             font-weight: bold;
-            margin-bottom: 2px;
+            color: #a80000;
+            margin: 0;
+            padding: 0;
+            display: block;
         }
         .company-tagline {
             font-size: 12pt;
-            margin-bottom: 5px;
+            color: #a80000;
+            margin: -5px 0 0 0;
+            padding: 0;
+            display: block;
         }
         .company-details {
             font-size: 9pt;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            line-height: 1.4;
         }
         .invoice-info {
             margin-bottom: 15px;
@@ -116,13 +146,24 @@
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="company-name">{{ company_name|default:"QBITX IMS" }}</div>
-        <div class="company-tagline">{{ company_tagline|default:"Transform Suppliers" }}</div>
-        <div class="company-details">
-            {{ company_details|default:"123 Business Street, Business City, Country<br>Phone: (123) 456-7890 | Email: info@qbitx-ims.com"|safe }}
-        </div>
-    </div>
+    <table class="header">
+        <tr>
+            <td class="header-left">
+                <span class="company-name">TRANSFORM SUPPLIERS</span><span class="company-tagline">Estd. 2021</span>
+            </td>
+            <td class="header-right">
+                <div class="company-details">
+                    431/A, Forest Research Road,<br>
+                    Muradpur, Panchlaish, Chittagong-4211,<br>
+                    Bangladesh<br>
+                    +8801855-859045<br>
+                    sales@goldennichebd.com<br>
+                    https://goldennichebd.com
+                </div>
+            </td>
+        </tr>
+    </table>
+    <hr class="header-separator">
     
     <div class="invoice-info">
         <div class="invoice-title">INVOICE</div>

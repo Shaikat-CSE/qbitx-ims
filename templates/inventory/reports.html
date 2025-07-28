@@ -155,8 +155,8 @@
 <!-- Inventory Value Report -->
 <div class="card mb-4">
     <div class="card-header">
-        <h5 class="mb-0">Inventory Value Report</h5>
-        <small class="text-muted">As of {{ today|date:"F j, Y" }}</small>
+        <h5 class="mb-0">{{ report_title }}</h5>
+        <small class="text-muted">{{ start_date|date:"F j, Y" }} to {{ end_date|date:"F j, Y" }}</small>
         {% if applied_filters %}
         <div class="mt-2">
             <span class="badge bg-info">Applied Filters: {{ applied_filters }}</span>
@@ -172,42 +172,43 @@
                         <th>SKU</th>
                         <th>Category</th>
                         <th>Supplier</th>
-                        <th>Quantity</th>
-                        <th>Unit Price</th>
-                        <th>Total Value</th>
-                        <th>Status</th>
+                        <th>Opening Stock</th>
+                        <th>Purchase Stock</th>
+                        <th>Total Stock</th>
+                        <th>Sale Stock</th>
+                        <th>Wastage Stock</th>
+                        <th>Closing Stock</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for product in products %}
+                    {% for item in report_data %}
                     <tr>
-                        <td>{{ product.name }}</td>
-                        <td>{{ product.sku }}</td>
-                        <td>{{ product.category.name }}</td>
-                        <td>{% if product.supplier %}{{ product.supplier.name }}{% else %}-{% endif %}</td>
-                        <td>{{ product.quantity }}</td>
-                        <td>{{ product.buying_price }}</td>
-                        <td>{{ product.total_value|floatformat:2 }}</td>
-                        <td>
-                            {% if product.is_low_stock %}
-                            <span class="badge bg-danger">Low Stock</span>
-                            {% else %}
-                            <span class="badge bg-success">In Stock</span>
-                            {% endif %}
-                        </td>
+                        <td>{{ item.product_name }}</td>
+                        <td>{{ item.sku }}</td>
+                        <td>{{ item.category }}</td>
+                        <td>{{ item.supplier }}</td>
+                        <td>{{ item.opening_stock|floatformat:-3 }}</td>
+                        <td>{{ item.purchase_stock|floatformat:-3 }}</td>
+                        <td>{{ item.total_stock|floatformat:-3 }}</td>
+                        <td>{{ item.sale_stock|floatformat:-3 }}</td>
+                        <td>{{ item.wastage_stock|floatformat:-3 }}</td>
+                        <td>{{ item.closing_stock|floatformat:-3 }}</td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="8" class="text-center">No products available.</td>
+                        <td colspan="10" class="text-center">No inventory data available for the selected period.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
                 <tfoot>
                     <tr class="table-dark">
-                        <td colspan="4" class="text-end"><strong>Total Quantity:</strong></td>
-                        <td><strong>{{ total_quantity }}</strong></td>
-                        <td class="text-end"><strong>Total Value:</strong></td>
-                        <td><strong>{{ total_value|floatformat:2 }}</strong></td>
+                        <td colspan="4" class="text-end"><strong>Overall Totals:</strong></td>
+                        <td><strong>{{ overall_total_opening_stock|floatformat:-3 }}</strong></td>
+                        <td><strong>{{ overall_total_purchase_stock|floatformat:-3 }}</strong></td>
+                        <td><strong>{{ overall_total_stock|floatformat:-3 }}</strong></td>
+                        <td><strong>{{ overall_total_sale_stock|floatformat:-3 }}</strong></td>
+                        <td><strong>{{ overall_total_wastage_stock|floatformat:-3 }}</strong></td>
+                        <td><strong>{{ overall_total_closing_stock|floatformat:-3 }}</strong></td>
                     </tr>
                 </tfoot>
             </table>

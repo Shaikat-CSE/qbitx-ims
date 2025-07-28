@@ -84,9 +84,10 @@
                         <th>UOM</th>
                         <th>Buying Price</th>
                         <th>Selling Price</th>
-                        <th>VAT (%)</th>
-                        <th>AIT (%)</th>
-                        <th>Unit Price</th>
+                        <th>VAT (10%)</th>
+                        <th>AIT Rate</th>
+                       <th>Unit Price</th>
+                       <th>Final Price</th>
                         <th>Wastage</th>
                         <th>Profit/Loss</th>
                         <th>Warehouse</th>
@@ -102,23 +103,22 @@
                         <td>{{ transaction.product.name }}</td>
                         <td>
                             {% if transaction.transaction_type == 'in' %}
-                            <span class="badge bg-success">Stock In</span>
+                                <span class="badge bg-success">Stock In</span>
                             {% elif transaction.transaction_type == 'out' %}
-                            <span class="badge bg-danger">Stock Out</span>
+                                <span class="badge bg-danger">Stock Out</span>
                             {% elif transaction.transaction_type == 'wastage' %}
-                            <span class="badge bg-warning text-dark">Wastage</span>
+                                <span class="badge bg-warning text-dark">Wastage</span>
                             {% elif transaction.transaction_type == 'return' %}
-                            <span class="badge bg-info">Return</span>
+                                <span class="badge bg-info">Return</span>
                             {% elif transaction.transaction_type == 'transfer' %}
-                            <span class="badge bg-primary">Transfer</span>
+                                <span class="badge bg-primary">Transfer</span>
                             {% endif %}
-                            
                             {% if transaction.transaction_type == 'out' and transaction.client %}
                                 {% for invoice in invoice_data %}
                                     {% if invoice.transaction_id == transaction.id %}
-                                    <span class="badge bg-success ms-1" title="Has Invoice">
-                                        <i class="fas fa-file-invoice-dollar"></i>
-                                    </span>
+                                        <span class="badge bg-success ms-1" title="Has Invoice">
+                                            <i class="fas fa-file-invoice-dollar"></i>
+                                        </span>
                                     {% endif %}
                                 {% endfor %}
                             {% endif %}
@@ -129,31 +129,20 @@
                         <td>{{ transaction.selling_price }} BDT</td>
                         <td>
                             {% if transaction.transaction_type == 'wastage' or not transaction.apply_taxes %}
-                            -
+                                -
                             {% else %}
-                            {{ transaction.vat_rate|default:0 }}
+                                10%
                             {% endif %}
                         </td>
                         <td>
                             {% if transaction.transaction_type == 'wastage' or not transaction.apply_taxes %}
-                            -
+                                -
                             {% else %}
-                            {{ transaction.ait_rate|default:0 }}
+                                {{ transaction.ait_rate|default:"0" }}%
                             {% endif %}
                         </td>
-                        <td>
-                            {% if transaction.transaction_type == 'wastage' %}
-                                {{ transaction.buying_price }} BDT
-                            {% elif transaction.apply_taxes and transaction.final_price %}
-                                {{ transaction.final_price }} BDT
-                            {% else %}
-                                {% if transaction.transaction_type == 'out' %}
-                                    {{ transaction.selling_price }} BDT
-                                {% else %}
-                                    {{ transaction.buying_price }} BDT
-                                {% endif %}
-                            {% endif %}
-                        </td>
+                        <td>{{ transaction.unit_price }} BDT</td>
+                        <td>{{ transaction.total_price|floatformat:2 }} BDT</td>
                         <td>
                             {% if transaction.wastage_amount > 0 %}
                                 {{ transaction.wastage_amount }} BDT
@@ -162,12 +151,13 @@
                             {% endif %}
                         </td>
                         <td>
+                            {# Profit/Loss = Selling Price - VAT - AIT - Buying Price - Wastage #}
                             {% if transaction.profit_loss > 0 %}
-                            <span class="text-success">{{ transaction.profit_loss }} BDT</span>
+                                <span class="text-success">{{ transaction.profit_loss|floatformat:2 }} BDT</span>
                             {% elif transaction.profit_loss < 0 %}
-                            <span class="text-danger">{{ transaction.profit_loss }} BDT</span>
+                                <span class="text-danger">{{ transaction.profit_loss|floatformat:2 }} BDT</span>
                             {% else %}
-                            <span>{{ transaction.profit_loss }} BDT</span>
+                                <span>{{ transaction.profit_loss|floatformat:2 }} BDT</span>
                             {% endif %}
                         </td>
                         <td>
@@ -193,14 +183,14 @@
                             {% if transaction.transaction_type == 'out' and transaction.client %}
                                 {% for invoice in invoice_data %}
                                     {% if invoice.transaction_id == transaction.id %}
-                                    <a href="{% url 'invoice_detail' invoice.invoice_id %}" class="btn btn-sm btn-outline-success" title="View Existing Invoice">
-                                        <i class="fas fa-file-invoice-dollar"></i>
-                                    </a>
+                                        <a href="{% url 'invoice_detail' invoice.invoice_id %}" class="btn btn-sm btn-outline-success" title="View Existing Invoice">
+                                            <i class="fas fa-file-invoice-dollar"></i>
+                                        </a>
                                     {% endif %}
                                 {% empty %}
-                                <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#invoiceModal" data-transaction-id="{{ transaction.id }}" data-transaction-product="{{ transaction.product.name }}" data-transaction-client="{{ transaction.client.name }}" title="Generate Invoice">
-                                    <i class="fas fa-file-invoice"></i>
-                                </button>
+                                    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#invoiceModal" data-transaction-id="{{ transaction.id }}" data-transaction-product="{{ transaction.product.name }}" data-transaction-client="{{ transaction.client.name }}" title="Generate Invoice">
+                                        <i class="fas fa-file-invoice"></i>
+                                    </button>
                                 {% endfor %}
                             {% endif %}
                             <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteTransactionModal{{ transaction.id }}" title="Delete Transaction">
@@ -356,4 +346,4 @@
     </div>
 </div>
 {% endfor %}
-{% endblock %} 
+{% endblock %}
