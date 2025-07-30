@@ -8,14 +8,14 @@
     <h1 class="h2">Reports</h1>
     <div class="btn-toolbar mb-2 mb-md-0">
         <div class="btn-group me-2">
-            <a href="{% url 'reports' %}?type=inventory" class="btn btn-sm btn-outline-secondary {% if report_type == 'inventory' %}active{% endif %}">
-                <i class="fas fa-boxes"></i> Inventory
-            </a>
             <a href="{% url 'reports' %}?type=sales" class="btn btn-sm btn-outline-secondary {% if report_type == 'sales' %}active{% endif %}">
                 <i class="fas fa-shopping-cart"></i> Sales
             </a>
             <a href="{% url 'reports' %}?type=purchase" class="btn btn-sm btn-outline-secondary {% if report_type == 'purchase' %}active{% endif %}">
                 <i class="fas fa-truck-loading"></i> Purchase
+            </a>
+            <a href="{% url 'reports' %}?type=inventory" class="btn btn-sm btn-outline-secondary {% if report_type == 'inventory' %}active{% endif %}">
+                <i class="fas fa-boxes"></i> Inventory
             </a>
             <a href="{% url 'reports' %}?type=wastage" class="btn btn-sm btn-outline-secondary {% if report_type == 'wastage' %}active{% endif %}">
                 <i class="fas fa-trash-alt"></i> Wastage
@@ -142,7 +142,7 @@
 <div class="d-flex justify-content-between mb-3">
     <h5>{{ report_title }}</h5>
     <div>
-        <a href="{% url 'generate_report_pdf' report_type %}?{% if start_date %}start_date={{ start_date|date:'Y-m-d' }}&{% endif %}{% if end_date %}end_date={{ end_date|date:'Y-m-d' }}&{% endif %}{% if product_id %}product_id={{ product_id }}&{% endif %}{% if category_id %}category_id={{ category_id }}&{% endif %}{% if supplier_id %}supplier_id={{ supplier_id }}&{% endif %}{% if client_id %}client_id={{ client_id }}&{% endif %}{% if group_by %}group_by={{ group_by }}&{% endif %}{% if sort_by %}sort_by={{ sort_by }}&{% endif %}" class="btn btn-sm btn-outline-success">
+        <a href="{% url 'generate_report_pdf' report_type %}{% if request.GET %}?{{ request.GET.urlencode }}{% endif %}" class="btn btn-sm btn-outline-success">
             <i class="fas fa-file-pdf"></i> Direct PDF Download
         </a>
         <button class="btn btn-sm btn-outline-primary download-pdf-btn" data-report-type="{{ report_type }}">
@@ -212,6 +212,41 @@
                     </tr>
                 </tfoot>
             </table>
+            {% if report_data.has_other_pages %}
+            <nav aria-label="Inventory pagination">
+                <ul class="pagination justify-content-center">
+                    {% if report_data.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ report_data.previous_page_number }}{% if request.GET %}&{{ request.GET.urlencode|safe|cut:'page='|cut:'&page=' }}{% endif %}" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">&laquo;</span>
+                    </li>
+                    {% endif %}
+                    {% for num in report_data.paginator.page_range %}
+                        {% if report_data.number == num %}
+                        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                        {% elif num > report_data.number|add:'-3' and num < report_data.number|add:'3' %}
+                        <li class="page-item"><a class="page-link" href="?page={{ num }}{% if request.GET %}&{{ request.GET.urlencode|safe|cut:'page='|cut:'&page=' }}{% endif %}">{{ num }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+                    {% if report_data.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ report_data.next_page_number }}{% if request.GET %}&{{ request.GET.urlencode|safe|cut:'page='|cut:'&page=' }}{% endif %}" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">&raquo;</span>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
         </div>
     </div>
 </div>

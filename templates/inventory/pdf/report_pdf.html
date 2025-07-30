@@ -147,30 +147,43 @@
                 <th>SKU</th>
                 <th>Category</th>
                 <th>Supplier</th>
-                <th>Quantity</th>
-                <th>Unit Price</th>
-                <th>Total Value</th>
+                <th>Opening Stock</th>
+                <th>Purchase Stock</th>
+                <th>Total Stock</th>
+                <th>Sale Stock</th>
+                <th>Wastage Stock</th>
+                <th>Closing Stock</th>
             </tr>
         </thead>
         <tbody>
-            {% for product in products %}
+            {% for item in report_data %}
             <tr>
-                <td>{{ product.name }}</td>
-                <td>{{ product.sku }}</td>
-                <td>{{ product.category.name }}</td>
-                <td>{% if product.supplier %}{{ product.supplier.name }}{% else %}-{% endif %}</td>
-                <td class="numeric">{{ product.quantity }}</td>
-                <td class="numeric">{{ product.buying_price }}</td>
-                <td class="numeric">{{ product.total_value|floatformat:2 }}</td>
+                <td>{{ item.product_name }}</td>
+                <td>{{ item.sku }}</td>
+                <td>{{ item.category }}</td>
+                <td>{{ item.supplier }}</td>
+                <td class="numeric">{{ item.opening_stock|floatformat:-3 }}</td>
+                <td class="numeric">{{ item.purchase_stock|floatformat:-3 }}</td>
+                <td class="numeric">{{ item.total_stock|floatformat:-3 }}</td>
+                <td class="numeric">{{ item.sale_stock|floatformat:-3 }}</td>
+                <td class="numeric">{{ item.wastage_stock|floatformat:-3 }}</td>
+                <td class="numeric">{{ item.closing_stock|floatformat:-3 }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="10" class="text-center">No inventory data available for the selected period.</td>
             </tr>
             {% endfor %}
         </tbody>
         <tfoot>
-            <tr>
-                <td colspan="4" class="text-end"><strong>Total Quantity:</strong></td>
-                <td class="numeric"><strong>{{ total_quantity }}</strong></td>
-                <td class="text-end"><strong>Total Value:</strong></td>
-                <td class="numeric"><strong>{{ total_value|floatformat:2 }}</strong></td>
+            <tr class="table-dark">
+                <td colspan="4" class="text-end"><strong>Overall Totals:</strong></td>
+                <td class="numeric"><strong>{{ overall_total_opening_stock|floatformat:-3 }}</strong></td>
+                <td class="numeric"><strong>{{ overall_total_purchase_stock|floatformat:-3 }}</strong></td>
+                <td class="numeric"><strong>{{ overall_total_stock|floatformat:-3 }}</strong></td>
+                <td class="numeric"><strong>{{ overall_total_sale_stock|floatformat:-3 }}</strong></td>
+                <td class="numeric"><strong>{{ overall_total_wastage_stock|floatformat:-3 }}</strong></td>
+                <td class="numeric"><strong>{{ overall_total_closing_stock|floatformat:-3 }}</strong></td>
             </tr>
         </tfoot>
     </table>
@@ -209,8 +222,8 @@
                     <td>{{ transaction.product.unit_of_measure }}</td>
                     <td class="text-right">{{ transaction.buying_price }}</td>
                     <td class="text-right">{{ transaction.selling_price }}</td>
-                    <td class="text-right">{{ transaction.vat_rate|default:0 }}</td>
-                    <td class="text-right">{{ transaction.ait_rate|default:0 }}</td>
+                    <td class="text-right">{% if transaction.apply_taxes %}{{ transaction.vat_rate|default:0 }}{% else %}-{% endif %}</td>
+                    <td class="text-right">{% if transaction.apply_taxes %}{{ transaction.ait_rate|default:0 }}{% else %}-{% endif %}</td>
                     <td class="text-right">{% if transaction.apply_taxes and transaction.final_price %}{{ transaction.final_price }}{% else %}{{ transaction.selling_price }}{% endif %}</td>
                     <td class="text-right">{{ transaction.total_price }}</td>
                     <td class="text-right">{{ transaction.profit_loss }}</td>
@@ -233,8 +246,8 @@
                     <td>{{ transaction.product.unit_of_measure }}</td>
                     <td class="text-right">{{ transaction.buying_price }}</td>
                     <td class="text-right">{{ transaction.selling_price }}</td>
-                    <td class="text-right">{{ transaction.vat_rate|default:0 }}</td>
-                    <td class="text-right">{{ transaction.ait_rate|default:0 }}</td>
+                    <td class="text-right">{% if transaction.apply_taxes %}{{ transaction.vat_rate|default:0 }}{% else %}-{% endif %}</td>
+                    <td class="text-right">{% if transaction.apply_taxes %}{{ transaction.ait_rate|default:0 }}{% else %}-{% endif %}</td>
                     <td class="text-right">{% if transaction.apply_taxes and transaction.final_price %}{{ transaction.final_price }}{% else %}{{ transaction.selling_price }}{% endif %}</td>
                     <td class="text-right">{{ transaction.total_price }}</td>
                     <td class="text-right">{{ transaction.profit_loss }}</td>

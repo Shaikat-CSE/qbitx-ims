@@ -873,7 +873,7 @@ def reports(request):
     })
     
     # Get report type
-    report_type = request.GET.get('type', 'inventory')
+    report_type = request.GET.get('type', 'sales')
     
     # Get filter parameters
     product_id = request.GET.get('product_id')
@@ -965,7 +965,7 @@ def reports(request):
             products = products.filter(category_id=category_id)
         if supplier_id:
             products = products.filter(supplier_id=supplier_id)
-
+        
         # Calculate stock movements for each product within the date range
         # and opening stock before the start_date
 
@@ -1104,9 +1104,20 @@ def reports(request):
         overall_total_stock = sum(item['total_stock'] for item in report_data)
         overall_total_closing_stock = sum(item['closing_stock'] for item in report_data)
         
+        # PAGINATION: Show 25 products per page (customize as needed)
+        from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+        page = request.GET.get('page', 1)
+        paginator = Paginator(report_data, 25)
+        try:
+            paginated_report_data = paginator.page(page)
+        except PageNotAnInteger:
+            paginated_report_data = paginator.page(1)
+        except EmptyPage:
+            paginated_report_data = paginator.page(paginator.num_pages)
+        
         context.update({
             'report_title': 'Inventory Stock Movement Report',
-            'report_data': report_data,
+            'report_data': paginated_report_data,
             'overall_total_opening_stock': overall_total_opening_stock,
             'overall_total_purchase_stock': overall_total_purchase_stock,
             'overall_total_sale_stock': overall_total_sale_stock,
@@ -2033,7 +2044,7 @@ def generate_report_pdf(request, report_type):
             products = products.filter(category_id=category_id)
         if supplier_id:
             products = products.filter(supplier_id=supplier_id)
-
+        
         # Calculate stock movements for each product within the date range
         # and opening stock before the start_date
 
